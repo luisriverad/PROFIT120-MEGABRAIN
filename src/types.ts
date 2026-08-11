@@ -53,24 +53,36 @@ export interface HallazgoValidado {
  */
 export type FuenteDato = 'sesion' | 'caratula'
 
+/**
+ * Naturaleza contable del dato. Ordena la captura por el documento del que sale,
+ * y dibuja las divisiones de la radiografía.
+ */
+export type NaturalezaDato =
+  | 'resultados'
+  | 'personal'
+  | 'capitalTrabajo'
+  | 'estructura'
+  | 'flujo'
+
 /** Dato financiero capturado, con un valor por ejercicio. */
 export interface CampoFinanciero {
   clave: string
   concepto: string
   unidad: 'mxn' | 'conteo'
   fuente: FuenteDato
+  naturaleza: NaturalezaDato
   ayuda?: string
   valores: (number | null)[]
 }
 
-export type FormatoRazon = 'pct' | 'veces' | 'mxn'
+export type FormatoRazon = 'pct' | 'veces' | 'mxn' | 'dias'
 
 /** Razón derivada. No se pregunta: se calcula con los campos capturados. */
 export interface Razon {
   clave: string
   concepto: string
   formula: string
-  grupo: 'rentabilidad' | 'real'
+  grupo: 'rentabilidad' | 'real' | 'dias' | 'caja'
   formato: FormatoRazon
   /** Sentido de mejora, para leer la variación entre ejercicios. */
   mejorSi: 'alto' | 'bajo'
@@ -78,6 +90,59 @@ export interface Razon {
   usa: string[]
   calcular: (v: Record<string, number>) => number | null
   lectura: string
+}
+
+/**
+ * Promedio de industria para una razón. `valor` viene en la misma unidad que
+ * devuelve Razon.calcular — fracción para 'pct', veces para 'veces'. Es null
+ * cuando la razón no tiene lectura comparable en ese sector, y entonces `nota`
+ * explica por qué.
+ */
+export interface BenchmarkRazon {
+  valor: number | null
+  /** Rango intercuartil del sector: entre p25 y p75 está la mitad de las empresas. */
+  min: number | null
+  max: number | null
+  nota?: string
+}
+
+export interface BenchmarkSector {
+  sector: string
+  vigencia: string
+  fuente: string
+  razones: Record<string, BenchmarkRazon>
+}
+
+/** Fuente citada por la IA al justificar o recalcular un promedio. */
+export interface FuenteIA {
+  nombre: string
+  url?: string
+  anio: string
+}
+
+/** Lectura de la IA sobre una razón: de dónde sale el promedio y qué tan firme es. */
+export interface RazonExplicada {
+  clave: string
+  /** En unidad de despliegue: 8.5 significa 8.5% o 8.5x. Null si no hay dato defendible. */
+  valor: number | null
+  min: number | null
+  max: number | null
+  confianza: 'alta' | 'media' | 'baja'
+  razonamiento: string
+  fuentes: FuenteIA[]
+}
+
+export interface ExplicacionPromedio {
+  resumen: string
+  metodologia: string
+  razones: RazonExplicada[]
+  advertencias: string[]
+}
+
+/** Turno de la conversación del cuadro de diálogo de recálculo. */
+export interface TurnoIA {
+  rol: 'consultor' | 'motor'
+  texto: string
 }
 
 export type EstadoDocumento = 'cargado' | 'parcial' | 'falta' | 'definido'

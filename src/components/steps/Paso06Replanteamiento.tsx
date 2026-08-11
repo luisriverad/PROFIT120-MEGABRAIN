@@ -50,7 +50,7 @@ export function Paso06Replanteamiento() {
         </TarjetaHallazgo>
       ))}
 
-      <Card titulo="Carga adicional derivada de la sesión" subtitulo="Documentos solicitados durante el replanteamiento.">
+      <Card titulo="Carga adicional derivada de la sesión">
         {CARGA_ADICIONAL.map((d) => <FilaDocumento key={d.nombre} doc={d} />)}
       </Card>
     </>

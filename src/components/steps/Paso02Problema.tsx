@@ -36,16 +36,13 @@ export function Paso02Problema() {
         al final, la diferencia entre lo que pidió y lo que realmente lo estaba costando.
       </NotaConsultor>
 
-      <Card titulo="Declaración textual del cliente" subtitulo="Palabras del cliente, sin traducción técnica.">
+      <Card titulo="Declaración textual del cliente">
         <div className="field">
           <textarea defaultValue={DECLARACION_CLIENTE} />
         </div>
       </Card>
 
-      <Card
-        titulo="Traducción a capa profunda"
-        subtitulo="Siete temas, cinco dimensiones cada uno. Se marcan las que el motor debe explorar; se pueden marcar varias por tema y varios temas a la vez."
-      >
+      <Card titulo="Traducción a capa profunda">
         {TEMAS_DIMENSIONES.map((t) => {
           const marcadas = t.dimensiones.filter((d) => activas.includes(d)).length
           const abierto = otrosAbiertos.includes(t.n)

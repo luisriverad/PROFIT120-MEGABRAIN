@@ -10,7 +10,7 @@ export function Paso08CausaRaiz() {
         entrada="Los cuatro costos convergen en un solo punto estructural. Atacar los síntomas por separado reproduce el problema en doce meses."
       />
 
-      <Card titulo="Cadena de causalidad" subtitulo="Del síntoma declarado a la causa estructural.">
+      <Card titulo="Cadena de causalidad">
         <div className="why-chain">
           {CADENA_CAUSAL.map((e, i) => (
             <div key={i}>

@@ -22,72 +22,103 @@ export const CLIENTE = {
  * o declaradas y sostienen todas las cuantificaciones. Las lecturas de
  * tendencia y la evidencia documental corren a 12 meses.
  *
- * Son doce datos, no más. Todo lo demás de la radiografía se deriva de
- * aquí (ver RAZONES en data/finanzas.ts): entre menos se pregunta, más
- * probable es salir de la primera entrevista con el expediente completo.
+ * Van agrupadas por naturaleza contable —resultados, personal, capital de
+ * trabajo, estructura financiera y flujo de efectivo— porque así están en los
+ * estados que trae el contador: el consultor las va cazando de un documento a
+ * la vez en lugar de saltar entre carátulas. Todo lo demás de la radiografía se
+ * deriva de aquí (ver RAZONES en data/finanzas.ts).
  */
 export const EJERCICIOS = ['Cierre 2025', 'Cierre 2024']
 
 export const CAMPOS_FINANCIEROS: CampoFinanciero[] = [
+  /* ---------- Resultados del ejercicio ---------- */
   {
-    clave: 'ventas', concepto: 'Facturación', unidad: 'mxn', fuente: 'sesion',
+    clave: 'ventas', concepto: 'Facturación', unidad: 'mxn', fuente: 'sesion', naturaleza: 'resultados',
     ayuda: 'Venta neta del ejercicio, sin IVA.',
     valores: [180_400_000, 152_900_000],
   },
   {
-    clave: 'utilidadNeta', concepto: 'Utilidad neta declarada', unidad: 'mxn', fuente: 'sesion',
-    ayuda: 'La que el cliente declara. Se toma como dicha, se valida después.',
-    valores: [5_590_000, 6_730_000],
-  },
-  {
-    clave: 'nomina', concepto: 'Nómina anual total', unidad: 'mxn', fuente: 'sesion',
-    ayuda: 'Sueldos, cargas sociales y prestaciones. Costo, no percepción.',
-    valores: [33_400_000, 22_500_000],
-  },
-  {
-    clave: 'empleados', concepto: 'Empleados totales', unidad: 'conteo', fuente: 'sesion',
-    ayuda: 'Plantilla al cierre, nómina propia más outsourcing fijo.',
-    valores: [140, 118],
-  },
-  {
-    clave: 'caja', concepto: 'Caja y bancos', unidad: 'mxn', fuente: 'sesion',
-    ayuda: 'Saldo disponible al cierre, sin inversiones restringidas.',
-    valores: [2_100_000, 4_800_000],
-  },
-  {
-    clave: 'inventario', concepto: 'Inventario', unidad: 'mxn', fuente: 'sesion',
-    ayuda: 'Materia prima, en proceso y producto terminado, a costo.',
-    valores: [22_500_000, 15_960_000],
-  },
-  {
-    clave: 'deuda', concepto: 'Deuda con costo', unidad: 'mxn', fuente: 'sesion',
-    ayuda: 'Bancos y arrendamiento. No incluye proveedores.',
-    valores: [38_000_000, 24_500_000],
-  },
-  {
-    clave: 'costoVentas', concepto: 'Costo de ventas', unidad: 'mxn', fuente: 'caratula',
+    clave: 'costoVentas', concepto: 'Costo de ventas', unidad: 'mxn', fuente: 'caratula', naturaleza: 'resultados',
     ayuda: 'Material, mano de obra directa y gastos indirectos de fabricación.',
     valores: [141_250_000, 109_935_000],
   },
   {
-    clave: 'utilidadOperativa', concepto: 'Utilidad de operación', unidad: 'mxn', fuente: 'caratula',
+    clave: 'compras', concepto: 'Compras del ejercicio', unidad: 'mxn', fuente: 'caratula', naturaleza: 'resultados',
+    ayuda: 'Lo comprado a proveedores en el año, a crédito y de contado. Sin él no hay días de pago.',
+    valores: [147_790_000, 114_800_000],
+  },
+  {
+    clave: 'utilidadOperativa', concepto: 'Utilidad de operación', unidad: 'mxn', fuente: 'caratula', naturaleza: 'resultados',
     ayuda: 'Antes de intereses e impuestos. Es la que mide el negocio, no la estructura financiera.',
     valores: [7_400_000, 11_010_000],
   },
   {
-    clave: 'cxc', concepto: 'Cuentas por cobrar', unidad: 'mxn', fuente: 'caratula',
+    clave: 'utilidadNeta', concepto: 'Utilidad neta declarada', unidad: 'mxn', fuente: 'sesion', naturaleza: 'resultados',
+    ayuda: 'La que el cliente declara. Se toma como dicha, se valida después.',
+    valores: [5_590_000, 6_730_000],
+  },
+
+  /* ---------- Personal ---------- */
+  {
+    clave: 'nomina', concepto: 'Nómina anual total', unidad: 'mxn', fuente: 'sesion', naturaleza: 'personal',
+    ayuda: 'Sueldos, cargas sociales y prestaciones. Costo, no percepción.',
+    valores: [33_400_000, 22_500_000],
+  },
+  {
+    clave: 'empleados', concepto: 'Empleados totales', unidad: 'conteo', fuente: 'sesion', naturaleza: 'personal',
+    ayuda: 'Plantilla al cierre, nómina propia más outsourcing fijo.',
+    valores: [140, 118],
+  },
+
+  /* ---------- Capital de trabajo ---------- */
+  {
+    clave: 'caja', concepto: 'Caja y bancos', unidad: 'mxn', fuente: 'sesion', naturaleza: 'capitalTrabajo',
+    ayuda: 'Saldo disponible al cierre, sin inversiones restringidas.',
+    valores: [2_100_000, 4_800_000],
+  },
+  {
+    clave: 'cxc', concepto: 'Cuentas por cobrar', unidad: 'mxn', fuente: 'caratula', naturaleza: 'capitalTrabajo',
     ayuda: 'Cartera de clientes al cierre, bruta.',
     valores: [35_100_000, 21_800_000],
   },
   {
-    clave: 'cxp', concepto: 'Cuentas por pagar', unidad: 'mxn', fuente: 'caratula',
+    clave: 'inventario', concepto: 'Inventario', unidad: 'mxn', fuente: 'sesion', naturaleza: 'capitalTrabajo',
+    ayuda: 'Materia prima, en proceso y producto terminado, a costo.',
+    valores: [22_500_000, 15_960_000],
+  },
+  {
+    clave: 'cxp', concepto: 'Cuentas por pagar', unidad: 'mxn', fuente: 'caratula', naturaleza: 'capitalTrabajo',
     ayuda: 'Proveedores de operación. No incluye deuda bancaria.',
     valores: [20_100_000, 13_550_000],
   },
   {
-    clave: 'capital', concepto: 'Capital contable', unidad: 'mxn', fuente: 'caratula',
+    clave: 'pasivoCirculante', concepto: 'Pasivo circulante total', unidad: 'mxn', fuente: 'caratula', naturaleza: 'capitalTrabajo',
+    ayuda: 'Todo lo que vence dentro de doce meses: proveedores, impuestos, acreedores y la porción corriente de la deuda.',
+    valores: [34_800_000, 22_400_000],
+  },
+
+  /* ---------- Estructura financiera ---------- */
+  {
+    clave: 'deuda', concepto: 'Deuda con costo', unidad: 'mxn', fuente: 'sesion', naturaleza: 'estructura',
+    ayuda: 'Bancos y arrendamiento. No incluye proveedores.',
+    valores: [38_000_000, 24_500_000],
+  },
+  {
+    clave: 'capital', concepto: 'Capital contable', unidad: 'mxn', fuente: 'caratula', naturaleza: 'estructura',
     ayuda: 'Patrimonio de los socios al cierre. Sin él no hay ROE.',
     valores: [62_400_000, 57_300_000],
+  },
+
+  /* ---------- Flujo de efectivo ---------- */
+  {
+    clave: 'fco', concepto: 'Flujo de caja de operación', unidad: 'mxn', fuente: 'caratula', naturaleza: 'flujo',
+    ayuda: 'Efectivo que dejó la operación, del estado de flujo de efectivo. Es la utilidad ya cobrada y pagada.',
+    valores: [1_850_000, 8_900_000],
+  },
+  {
+    clave: 'capex', concepto: 'Inversión en activo fijo', unidad: 'mxn', fuente: 'caratula', naturaleza: 'flujo',
+    ayuda: 'Lo que se gastó en máquinas, equipo e instalaciones durante el ejercicio.',
+    valores: [6_400_000, 4_200_000],
   },
 ]
 

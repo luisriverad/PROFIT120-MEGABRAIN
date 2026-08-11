@@ -12,7 +12,7 @@ export function Paso03Hipotesis() {
         entrada="Las respuestas del cliente a estas preguntas revelan dónde está mirando y, sobre todo, dónde no. El motor usa las brechas para dirigir el análisis del paso 05."
       />
 
-      <Card titulo="Batería de contexto profundo" subtitulo="Preguntas formuladas para hacerse al cliente en sesión.">
+      <Card titulo="Batería de contexto profundo">
         <div className="qlist">
           <PreguntaConOpciones {...CONTEXTO_OPCIONES[0]} />
           <PreguntaConNumero {...CONTEXTO_NUMEROS[0]} />

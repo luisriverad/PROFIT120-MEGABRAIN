@@ -35,10 +35,7 @@ export function Paso10Accountability() {
         </table>
       </Card>
 
-      <Card
-        titulo="Ritmo de sostenimiento"
-        subtitulo="La medición sin ritmo se abandona en seis semanas. El antecedente de 2022 lo confirma."
-      >
+      <Card titulo="Ritmo de sostenimiento">
         {RITMO.map((d) => <FilaDocumento key={d.nombre} doc={d} />)}
       </Card>
 
