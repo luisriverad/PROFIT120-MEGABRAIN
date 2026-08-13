@@ -3,9 +3,8 @@ import type {
   BenchmarkRazon, BenchmarkSector, ExplicacionPromedio, Razon, RazonExplicada, TurnoIA,
 } from '@/types'
 import { formatearRazon } from '@/data/finanzas'
-import {
-  MODELO_IA, PROXY, aBenchmark, explicarPromedio, guardarApiKey, hayCredencial, leerApiKey,
-} from '@/lib/ia'
+import { MODELO_IA, PROXY, aBenchmark, explicarPromedio, hayCredencial } from '@/lib/ia'
+import { LlaveIA } from '@/components/ui/LlaveIA'
 
 /**
  * Ventana de "Explicar promedio".
@@ -43,7 +42,6 @@ export function ModalPromedio({
   const [instruccion, setInstruccion] = useState('')
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState('')
-  const [llave, setLlave] = useState(leerApiKey())
   const [pidiendoLlave, setPidiendoLlave] = useState(!hayCredencial())
   const cuerpo = useRef<HTMLDivElement>(null)
 
@@ -95,30 +93,7 @@ export function ModalPromedio({
         </div>
 
         <div className="modal-body" ref={cuerpo}>
-          {pidiendoLlave && (
-            <div className="modal-llave">
-              <label>Clave de API de Anthropic</label>
-              <p>
-                Se guarda solo en este navegador y viaja directo a la API. Para un despliegue
-                compartido, define <code>VITE_IA_PROXY_URL</code> y la clave se queda en tu servidor.
-              </p>
-              <div className="modal-llave-row">
-                <input
-                  type="password"
-                  value={llave}
-                  placeholder="sk-ant-..."
-                  onChange={(e) => setLlave(e.target.value)}
-                />
-                <button
-                  className="btn-solido"
-                  disabled={!llave.trim()}
-                  onClick={() => { guardarApiKey(llave.trim()); setPidiendoLlave(false) }}
-                >
-                  Guardar
-                </button>
-              </div>
-            </div>
-          )}
+          {pidiendoLlave && <LlaveIA onListo={() => setPidiendoLlave(false)} />}
 
           {/* Lo que el motor está usando hoy */}
           <div className="modal-sec">

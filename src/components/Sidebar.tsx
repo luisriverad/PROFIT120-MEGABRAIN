@@ -35,7 +35,6 @@ export function Sidebar({
             <span className="step-num">{p.n}</span>
             <span className="step-txt">
               <span className="st">{p.titulo}</span>
-              <span className="sq">{p.pregunta}</span>
             </span>
           </button>
         ))}

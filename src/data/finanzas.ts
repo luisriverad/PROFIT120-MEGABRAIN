@@ -1,4 +1,4 @@
-import type { CampoFinanciero, FormatoRazon, Razon } from '@/types'
+import type { CampoFinanciero, Ejercicio, FormatoRazon, Razon } from '@/types'
 
 /** Tasa de ISR usada para llevar la utilidad de operación a NOPAT. */
 const ISR = 0.30
@@ -24,6 +24,17 @@ export const RAZONES: Razon[] = [
     usa: ['utilidadOperativa', 'ventas'],
     calcular: (v) => v.ventas ? v.utilidadOperativa / v.ventas : null,
     lectura: 'Cuánto deja cada peso vendido antes de intereses e impuestos. Si cae mientras la venta sube, el crecimiento está comprando pérdida.',
+  },
+  {
+    clave: 'margenEbitda',
+    concepto: 'Margen EBITDA',
+    formula: 'EBITDA / Facturación',
+    grupo: 'rentabilidad',
+    formato: 'pct',
+    mejorSi: 'alto',
+    usa: ['ebitda', 'ventas'],
+    calcular: (v) => v.ventas ? v.ebitda / v.ventas : null,
+    lectura: 'Lo que deja la operación antes de depreciar, financiar y pagar impuestos. Es la vara con la que el banco y cualquier comprador miden el negocio, porque no depende de cómo esté contabilizado el activo.',
   },
   {
     clave: 'roe',
@@ -59,8 +70,8 @@ export const RAZONES: Razon[] = [
     grupo: 'real',
     formato: 'mxn',
     mejorSi: 'bajo',
-    usa: ['caja', 'cxc', 'inventario', 'cxp'],
-    calcular: (v) => v.caja + v.cxc + v.inventario - v.cxp,
+    usa: ['caja', 'cxc', 'inventarioFinal', 'cxp'],
+    calcular: (v) => v.caja + v.cxc + v.inventarioFinal - v.cxp,
     lectura: 'El dinero que la operación tiene secuestrado para poder funcionar. No aparece como gasto en ningún lado y por eso nadie lo defiende.',
   },
   {
@@ -70,8 +81,8 @@ export const RAZONES: Razon[] = [
     grupo: 'real',
     formato: 'pct',
     mejorSi: 'bajo',
-    usa: ['caja', 'cxc', 'inventario', 'cxp', 'ventas'],
-    calcular: (v) => v.ventas ? (v.caja + v.cxc + v.inventario - v.cxp) / v.ventas : null,
+    usa: ['caja', 'cxc', 'inventarioFinal', 'cxp', 'ventas'],
+    calcular: (v) => v.ventas ? (v.caja + v.cxc + v.inventarioFinal - v.cxp) / v.ventas : null,
     lectura: 'Cuántos centavos hay que inmovilizar por cada peso que se vende. Si sube, cada venta nueva exige más dinero del que trae.',
   },
   {
@@ -97,6 +108,18 @@ export const RAZONES: Razon[] = [
     lectura: 'Cuántos años de operación completa cuesta la deuda. Arriba de 3 veces, el banco ya manda más que el dueño.',
   },
 
+  {
+    clave: 'deudaEbitda',
+    concepto: 'Deuda con costo sobre EBITDA',
+    formula: 'Deuda con costo / EBITDA',
+    grupo: 'real',
+    formato: 'veces',
+    mejorSi: 'bajo',
+    usa: ['deuda', 'ebitda'],
+    calcular: (v) => v.ebitda > 0 ? v.deuda / v.ebitda : null,
+    lectura: 'El covenant que trae escrito casi todo crédito bancario en México. Arriba de 3.5 veces la mayoría de los contratos ya está en incumplimiento técnico, aunque nadie lo haya llamado todavía.',
+  },
+
   /* ---------- Capital de trabajo en días ---------- */
   {
     clave: 'cxcDias',
@@ -116,8 +139,8 @@ export const RAZONES: Razon[] = [
     grupo: 'dias',
     formato: 'dias',
     mejorSi: 'bajo',
-    usa: ['inventario', 'costoVentas'],
-    calcular: (v) => v.costoVentas ? v.inventario / (v.costoVentas / DIAS) : null,
+    usa: ['inventarioFinal', 'costoVentas'],
+    calcular: (v) => v.costoVentas ? v.inventarioFinal / (v.costoVentas / DIAS) : null,
     lectura: 'Cuántos días de venta están parados en la bodega. Es capital detenido que además se obsoleta, se merma y ocupa espacio.',
   },
   {
@@ -138,15 +161,40 @@ export const RAZONES: Razon[] = [
     grupo: 'dias',
     formato: 'dias',
     mejorSi: 'bajo',
-    usa: ['cxc', 'ventas', 'inventario', 'costoVentas', 'cxp', 'compras'],
+    usa: ['cxc', 'ventas', 'inventarioFinal', 'costoVentas', 'cxp', 'compras'],
     calcular: (v) => {
       if (!v.ventas || !v.costoVentas || !v.compras) return null
-      return v.cxc / (v.ventas / DIAS) + v.inventario / (v.costoVentas / DIAS) - v.cxp / (v.compras / DIAS)
+      return v.cxc / (v.ventas / DIAS) + v.inventarioFinal / (v.costoVentas / DIAS) - v.cxp / (v.compras / DIAS)
     },
     lectura: 'El cierre de los tres anteriores: cuántos días pasan entre que la empresa paga y que cobra. Es el hueco que alguien tiene que financiar, y ese alguien es el banco o el dueño.',
   },
 
-  /* ---------- Caja y flujo ---------- */
+  /* ---------- Liquidez y flujo ---------- */
+  // Las tres primeras son la misma pregunta con el filtro cada vez más estricto:
+  // primero todo el activo circulante, luego sin el inventario, al final solo el
+  // efectivo. Dónde se rompe la escalera dice de qué está hecha la liquidez.
+  {
+    clave: 'razonCirculante',
+    concepto: 'Razón circulante',
+    formula: 'Activo circulante / Pasivo circulante',
+    grupo: 'caja',
+    formato: 'veces',
+    mejorSi: 'alto',
+    usa: ['activoCirculante', 'pasivoCirculante'],
+    calcular: (v) => v.pasivoCirculante ? v.activoCirculante / v.pasivoCirculante : null,
+    lectura: 'Cuántos pesos de activo de corto plazo respaldan cada peso que vence este año. Por debajo de 1 vez la empresa ya está financiando el largo plazo con dinero de corto.',
+  },
+  {
+    clave: 'pruebaAcido',
+    concepto: 'Prueba del ácido',
+    formula: '(Activo circulante − Inventario) / Pasivo circulante',
+    grupo: 'caja',
+    formato: 'veces',
+    mejorSi: 'alto',
+    usa: ['activoCirculante', 'inventarioFinal', 'pasivoCirculante'],
+    calcular: (v) => v.pasivoCirculante ? (v.activoCirculante - v.inventarioFinal) / v.pasivoCirculante : null,
+    lectura: 'La misma cuenta sin contar la bodega, porque vender el inventario contra reloj significa rematarlo. Si la razón circulante se ve bien y esta no, la liquidez está hecha de mercancía.',
+  },
   {
     clave: 'cashRatio',
     concepto: 'Ratio de caja',
@@ -203,8 +251,8 @@ export const RAZONES: Razon[] = [
     grupo: 'caja',
     formato: 'pct',
     mejorSi: 'bajo',
-    usa: ['cxc', 'inventario', 'cxp', 'ventas'],
-    calcular: (v) => v.ventas ? (v.cxc + v.inventario - v.cxp) / v.ventas : null,
+    usa: ['cxc', 'inventarioFinal', 'cxp', 'ventas'],
+    calcular: (v) => v.ventas ? (v.cxc + v.inventarioFinal - v.cxp) / v.ventas : null,
     lectura: 'Cuánta caja se traga el ciclo comercial por cada peso vendido. Si sube al mismo tiempo que la venta, el crecimiento se está financiando solo con deuda.',
   },
   {
@@ -277,12 +325,40 @@ export function variacionRazon(actual: number | null, previo: number | null, for
   return { texto: `${signo(d)}$${MXN.format(Math.abs(Math.round(d)))} · ${signo(pct)}${Math.abs(pct).toFixed(0)}%`, delta: d }
 }
 
-/** Valores de un ejercicio indexados por clave, listos para calcular. */
-export function valoresDelEjercicio(campos: CampoFinanciero[], i: number) {
+/**
+ * Valores de un ejercicio indexados por clave, listos para calcular.
+ *
+ * El orden importa. Primero los capturados tal como se teclearon, luego los
+ * derivados sobre ellos, y hasta el final la anualización de los flujos. Al
+ * revés saldría mal: las compras se derivan de un costo del periodo y de un
+ * movimiento de inventario del mismo periodo, así que anualizar antes mezclaría
+ * un costo de doce meses con un inventario de siete.
+ *
+ * `meses` es la duración del periodo. Con 12 no se anualiza nada; con menos, los
+ * campos marcados `acumula` se llevan a base anual para poder compararse contra
+ * un cierre completo y contra el promedio de la industria. Los saldos de balance
+ * nunca se tocan: ya vienen a una fecha.
+ */
+export function valoresDelEjercicio(campos: CampoFinanciero[], i: number, meses = 12) {
+  const crudo: Record<string, number> = {}
+  for (const c of campos) {
+    if (c.derivado) continue
+    const n = c.valores[i]
+    if (n !== null && n !== undefined) crudo[c.clave] = n
+  }
+  for (const c of campos) {
+    if (!c.derivado) continue
+    const n = c.derivado(crudo)
+    if (n !== null) crudo[c.clave] = n
+  }
+
+  if (meses >= 12) return crudo
+
+  const factor = 12 / meses
   const v: Record<string, number> = {}
   for (const c of campos) {
-    const n = c.valores[i]
-    if (n !== null && n !== undefined) v[c.clave] = n
+    const n = crudo[c.clave]
+    if (n !== undefined) v[c.clave] = c.acumula ? n * factor : n
   }
   return v
 }
@@ -293,3 +369,81 @@ export function faltantes(razon: Razon, valores: Record<string, number>, campos:
     .filter((k) => valores[k] === undefined)
     .map((k) => campos.find((c) => c.clave === k)?.concepto ?? k)
 }
+
+/* ---------- Lo que la radiografía ya contesta ---------- */
+
+/**
+ * Preguntas del paso 03 que no hay que hacerle al cliente porque los números de
+ * la radiografía ya las responden. Cada una devuelve la variación redactada, o
+ * null si falta algún dato.
+ *
+ * El MTD entra anualizado, igual que en el diagnóstico: comparar siete meses de
+ * venta contra un año completo daría una caída inventada.
+ */
+export const LECTURAS_AUTOMATICAS: Record<
+  string,
+  (campos: CampoFinanciero[], ejercicios: Ejercicio[]) => string | null
+> = {
+  margenBruto: (campos, ejercicios) => {
+    const v = ejercicios.map((e, i) => valoresDelEjercicio(campos, i, e.meses))
+    const mb = (x: Record<string, number>) =>
+      x.ventas && x.costoVentas !== undefined ? (x.ventas - x.costoVentas) / x.ventas : null
+    const [a, b, c] = v.map(mb)
+    if (a === null || b === null) return null
+    const caida = (b - a) * 100
+    const base = `${signoPP(caida)} contra ${ejercicios[1].etiqueta}: de ${pct(b)} a ${pct(a)}.`
+    if (c === null) return base
+    return `${base} Acumulado desde ${ejercicios[2].etiqueta}, ${signoPP((c - a) * 100)}: venía de ${pct(c)}.`
+  },
+
+  cicloEfectivo: (campos, ejercicios) => {
+    const razon = RAZONES.find((r) => r.clave === 'cicloEfectivo')!
+    const d = ejercicios.map((e, i) => {
+      const x = valoresDelEjercicio(campos, i, e.meses)
+      return faltantes(razon, x, campos).length ? null : razon.calcular(x)
+    })
+    if (d[0] === null || d[1] === null) return null
+    const dif = d[0] - d[1]
+    const base = `${Math.round(d[0])} días al corte, ${signoDias(dif)} contra los ${Math.round(d[1])} de ${ejercicios[1].etiqueta}.`
+    return d[2] === null ? base : `${base} En ${ejercicios[2].etiqueta} eran ${Math.round(d[2])}.`
+  },
+
+  tesoreria: (campos, ejercicios) => {
+    const razon = RAZONES.find((r) => r.clave === 'diasTesoreria')!
+    const v = ejercicios.map((e, i) => valoresDelEjercicio(campos, i, e.meses))
+    const d = v.map((x) => (faltantes(razon, x, campos).length ? null : razon.calcular(x)))
+    if (d[0] === null || v[0].caja === undefined || v[1]?.caja === undefined) return null
+    const caida = ((v[0].caja - v[1].caja) / v[1].caja) * 100
+    return `${Math.round(d[0])} días de operación con la caja actual. El saldo pasó de ${MXN2(v[1].caja)} a ${MXN2(v[0].caja)}, ${signoPct(caida)}.`
+  },
+
+  nominaVenta: (campos, ejercicios) => {
+    const v = ejercicios.map((e, i) => valoresDelEjercicio(campos, i, e.meses))
+    if (!v[0].ventas || !v[1]?.ventas || !v[0].nomina || !v[1]?.nomina) return null
+    const cv = ((v[0].ventas - v[1].ventas) / v[1].ventas) * 100
+    const cn = ((v[0].nomina - v[1].nomina) / v[1].nomina) * 100
+    const razon = RAZONES.find((r) => r.clave === 'ventaNomina')!
+    const p0 = razon.calcular(v[0])
+    const p1 = razon.calcular(v[1])
+    const productividad = p0 !== null && p1 !== null
+      ? ` La venta por peso de nómina pasó de ${p1.toFixed(2)}x a ${p0.toFixed(2)}x.`
+      : ''
+    return `Venta ${signoPct(cv)}, nómina ${signoPct(cn)} contra ${ejercicios[1].etiqueta}.${productividad}`
+  },
+
+  apalancamiento: (campos, ejercicios) => {
+    const razon = RAZONES.find((r) => r.clave === 'deudaEbitda')!
+    const v = ejercicios.map((e, i) => valoresDelEjercicio(campos, i, e.meses))
+    const d = v.map((x) => (faltantes(razon, x, campos).length ? null : razon.calcular(x)))
+    if (d[0] === null || d[1] === null || v[0].deuda === undefined || v[1].deuda === undefined) return null
+    const crec = ((v[0].deuda - v[1].deuda) / v[1].deuda) * 100
+    return `${d[0].toFixed(2)}x al corte, contra ${d[1].toFixed(2)}x en ${ejercicios[1].etiqueta}. La deuda con costo creció ${signoPct(crec)}, hasta ${MXN2(v[0].deuda)}.`
+  },
+}
+
+const signo = (n: number) => (n >= 0 ? '+' : '−')
+const pct = (n: number) => `${(n * 100).toFixed(1)}%`
+const signoPP = (n: number) => `${signo(-n)}${Math.abs(n).toFixed(1)} pp`
+const signoPct = (n: number) => `${signo(n)}${Math.abs(n).toFixed(0)}%`
+const signoDias = (n: number) => `${signo(n)}${Math.abs(Math.round(n))} días`
+const MXN2 = (n: number) => `$${MXN.format(Math.round(n))}`

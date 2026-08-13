@@ -1,7 +1,7 @@
 import { Fragment, useState } from 'react'
 import { SECTORES } from '@/data/catalogo'
 import {
-  ANTECEDENTE, CAMPOS_FINANCIEROS, CLIENTE, EJERCICIOS, ESTRUCTURA_DECISION, TENDENCIAS,
+  ANTECEDENTE, CLIENTE, ESTRUCTURA_DECISION, TENDENCIAS,
 } from '@/data/caso'
 import { RAZONES, parsearCampo } from '@/data/finanzas'
 import { benchmarkDelSector } from '@/data/benchmarks'
@@ -11,6 +11,9 @@ import {
   PreguntaConOpciones, PreguntaConTexto, TablaRazones,
 } from '@/components/ui/Primitivos'
 import { ModalPromedio } from '@/components/ui/ModalPromedio'
+import { AnalisisProfundidad } from '@/components/ui/AnalisisProfundidad'
+import { ExpedienteDigital } from '@/components/ui/ExpedienteDigital'
+import { useExpediente } from '@/estado/Expediente'
 
 const OPCIONES_TENDENCIA: { texto: string; clave: Tendencia }[] = [
   { texto: 'Creció', clave: 'up' },
@@ -20,15 +23,24 @@ const OPCIONES_TENDENCIA: { texto: string; clave: Tendencia }[] = [
 ]
 
 export function Paso01Contexto() {
+  const { campos, setCampos, ejercicios, setEjercicios, mapa, setMapa } = useExpediente()
   const [tendencias, setTendencias] = useState(TENDENCIAS)
   const [sector, setSector] = useState(CLIENTE.sector)
-  const [campos, setCampos] = useState(CAMPOS_FINANCIEROS)
   /** Recálculos que la IA aplicó encima de la base precargada del sector. */
   const [ajustes, setAjustes] = useState<Record<string, BenchmarkRazon>>({})
   /** Grupo de razones abierto en la ventana de explicación, si hay alguno. */
   const [revision, setRevision] = useState<{ titulo: string; razones: Razon[] } | null>(null)
   /** El diagnóstico arranca cerrado: no interrumpe la captura hasta que se pide. */
   const [diagnostico, setDiagnostico] = useState(false)
+  const [decision, setDecision] = useState(ESTRUCTURA_DECISION)
+
+  const [antecedente, setAntecedente] = useState(ANTECEDENTE.valor)
+
+  const cambiarMes = (indice: number, meses: number) =>
+    setEjercicios((es) => es.map((e, j) => (j === indice ? { ...e, meses } : e)))
+
+  const responder = (i: number, seleccion: number) =>
+    setDecision((ps) => ps.map((p, j) => (j === i ? { ...p, seleccion } : p)))
 
   const cambiarSector = (nuevo: string) => {
     setSector(nuevo)
@@ -53,16 +65,12 @@ export function Paso01Contexto() {
     { titulo: 'Rentabilidad', razones: RAZONES.filter((r) => r.grupo === 'rentabilidad') },
     { titulo: 'Razones reales — dónde está el dinero', razones: RAZONES.filter((r) => r.grupo === 'real') },
     { titulo: 'Capital de trabajo en días', razones: RAZONES.filter((r) => r.grupo === 'dias') },
-    { titulo: 'Caja y flujo — lo que sí llegó al banco', razones: RAZONES.filter((r) => r.grupo === 'caja') },
+    { titulo: 'Liquidez y caja — lo que sí llegó al banco', razones: RAZONES.filter((r) => r.grupo === 'caja') },
   ]
 
   return (
     <>
-      <EncabezadoPaso
-        paso="Paso 01 · Contexto"
-        titulo="Cuéntame"
-        entrada="Antes de escuchar el problema, se fija el marco. Todo lo que viene después se calcula contra estos números, así que ninguna cifra aquí es opcional."
-      />
+      <EncabezadoPaso paso="Paso 01 · Contexto" titulo="Cuéntame" />
 
       <Card titulo="Expediente del cliente">
         <div className="grid3">
@@ -72,7 +80,7 @@ export function Paso01Contexto() {
         </div>
         <div className="grid2">
           <Campo etiqueta="Clientes que hacen el 80% de la venta" valor={CLIENTE.clientes80} />
-          <Campo etiqueta="Líneas de producto activas" valor={CLIENTE.lineasActivas} />
+          <Campo etiqueta="Líneas de productos activas / Unidades de negocio activas" valor={CLIENTE.lineasActivas} />
         </div>
       </Card>
 
@@ -82,7 +90,7 @@ export function Paso01Contexto() {
           factibilidad —primero los siete que el cliente da de memoria, luego los
           cinco de carátula—, así que el orden de renglones no cambia.
         */}
-        <CapturaFinanciera ejercicios={EJERCICIOS} campos={campos} onChange={editarCampo} />
+        <CapturaFinanciera ejercicios={ejercicios} campos={campos} onChange={editarCampo} onMes={cambiarMes} />
       </Card>
 
       <Card titulo="Lectura rápida de tendencia">
@@ -110,11 +118,15 @@ export function Paso01Contexto() {
 
       <Card titulo="Estructura de decisión">
         <div className="qlist">
-          {ESTRUCTURA_DECISION.map((p) => (
-            <PreguntaConOpciones key={p.pregunta} {...p} />
+          {decision.map((p, i) => (
+            <PreguntaConOpciones key={p.pregunta} {...p} onSelect={(s) => responder(i, s)} />
           ))}
-          <PreguntaConTexto {...ANTECEDENTE} />
+          <PreguntaConTexto {...ANTECEDENTE} valor={antecedente} onChange={setAntecedente} />
         </div>
+      </Card>
+
+      <Card titulo="Expediente digital">
+        <ExpedienteDigital />
       </Card>
 
       {/*
@@ -134,7 +146,7 @@ export function Paso01Contexto() {
               <Fragment key={bloque.titulo}>
                 <div className="rad-sub">{bloque.titulo}</div>
                 <TablaRazones
-                  ejercicios={EJERCICIOS}
+                  ejercicios={ejercicios}
                   campos={campos}
                   razones={bloque.razones}
                   benchmark={benchmark}
@@ -150,6 +162,17 @@ export function Paso01Contexto() {
               cliente no vino a tener. Si el ROIC queda por debajo de la tasa a la que le presta el banco,
               cada peso vendido de más destruye valor: ahí se cae el "necesito vender más" del paso 02.
             </NotaConsultor>
+
+            {/* El diagnóstico calcula; esto interpreta. Cierra el paso. */}
+            <AnalisisProfundidad
+              cliente={CLIENTE}
+              ejercicios={ejercicios}
+              campos={campos}
+              razones={RAZONES}
+              benchmark={benchmark}
+              mapa={mapa}
+              onMapa={setMapa}
+            />
           </div>
         )}
       </div>

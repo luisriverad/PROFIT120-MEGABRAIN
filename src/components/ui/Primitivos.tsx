@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from 'react'
-import type { BenchmarkSector, CampoFinanciero, Documento, Razon, Severidad } from '@/types'
+import type { BenchmarkSector, CampoFinanciero, Documento, Ejercicio, Razon } from '@/types'
 import {
   faltantes, formatearCampo, formatearRazon, valoresDelEjercicio, variacionRazon,
 } from '@/data/finanzas'
@@ -7,14 +7,12 @@ import { brechaContraIndustria } from '@/data/benchmarks'
 
 /* ---------- Encabezado de paso ---------- */
 
-export function EncabezadoPaso({
-  paso, titulo, entrada,
-}: { paso: string; titulo: string; entrada: string }) {
+/** Rótulo del paso y la pregunta que lo abre. Sin texto de entrada debajo. */
+export function EncabezadoPaso({ paso, titulo }: { paso: string; titulo: string }) {
   return (
     <>
       <div className="eyebrow">{paso}</div>
       <h1 className="h-es">{titulo}</h1>
-      <p className="lead">{entrada}</p>
     </>
   )
 }
@@ -67,23 +65,63 @@ export function CampoLista({
   )
 }
 
+const MESES = [
+  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+]
+
+/**
+ * Encabezado de una columna. El periodo en curso trae el selector del mes de
+ * corte: nadie sabe de antemano hasta dónde llega la contabilidad del cliente,
+ * y ese mes es el que decide cómo se anualiza todo lo de abajo.
+ */
+function CabezaEjercicio({
+  ejercicio, indice, onMes,
+}: {
+  ejercicio: Ejercicio
+  indice: number
+  onMes?: (indice: number, meses: number) => void
+}) {
+  if (!ejercicio.enCurso) {
+    return <span className={`yh ${indice > 0 ? 'prev' : ''}`}>{ejercicio.etiqueta}</span>
+  }
+  return (
+    <span className="yh mtd">
+      {ejercicio.etiqueta}
+      <select
+        className="yh-mes"
+        value={ejercicio.meses}
+        disabled={!onMes}
+        onChange={(e) => onMes?.(indice, Number(e.target.value))}
+      >
+        {MESES.map((m, k) => <option key={m} value={k + 1}>a {m}</option>)}
+      </select>
+    </span>
+  )
+}
+
 /**
  * Bloque de captura: un renglón por dato, una columna por ejercicio.
  * Se dibuja una línea cada vez que cambia la naturaleza del dato, para que la
  * captura siga el orden de los documentos que trae el contador.
  */
 export function CapturaFinanciera({
-  ejercicios, campos, onChange,
+  ejercicios, campos, onChange, onMes,
 }: {
-  ejercicios: string[]
+  ejercicios: Ejercicio[]
   campos: CampoFinanciero[]
   onChange?: (clave: string, ejercicio: number, v: string) => void
+  onMes?: (indice: number, meses: number) => void
 }) {
+  // Aquí se pinta lo que de verdad pasó en el periodo: los derivados se
+  // resuelven sin anualizar. La anualización solo aplica a las razones.
+  const porEjercicio = ejercicios.map((_, i) => valoresDelEjercicio(campos, i))
+
   return (
     <div className="years" style={{ gridTemplateColumns: `minmax(230px,1.2fr) repeat(${ejercicios.length},1fr)` }}>
       <span />
       {ejercicios.map((e, i) => (
-        <span key={e} className={`yh ${i > 0 ? 'prev' : ''}`}>{e}</span>
+        <CabezaEjercicio key={e.etiqueta} ejercicio={e} indice={i} onMes={onMes} />
       ))}
       {campos.map((c, i) => {
         const abreNaturaleza = i > 0 && campos[i - 1].naturaleza !== c.naturaleza
@@ -95,16 +133,26 @@ export function CapturaFinanciera({
               {c.concepto}
               {c.ayuda && <span className="yc-help">{c.ayuda}</span>}
             </label>
-            {ejercicios.map((_, j) => (
-              <input
-                key={j}
-                className={j > 0 ? 'prev' : ''}
-                value={formatearCampo(c.valores[j] ?? null, c.unidad)}
-                placeholder="Sin dato"
-                onChange={(e) => onChange?.(c.clave, j, e.target.value)}
-                readOnly={!onChange}
-              />
-            ))}
+            {ejercicios.map((_, j) => {
+              if (c.derivado) {
+                const n = porEjercicio[j][c.clave]
+                return (
+                  <div key={j} className={`ycalc ${j > 0 ? 'prev' : ''}`}>
+                    {n === undefined ? 'Falta un dato' : formatearCampo(n, c.unidad)}
+                  </div>
+                )
+              }
+              return (
+                <input
+                  key={j}
+                  className={j > 0 ? 'prev' : ''}
+                  value={formatearCampo(c.valores[j] ?? null, c.unidad)}
+                  placeholder="Sin dato"
+                  onChange={(e) => onChange?.(c.clave, j, e.target.value)}
+                  readOnly={!onChange}
+                />
+              )
+            })}
           </Fragment>
         )
       })}
@@ -120,13 +168,15 @@ export function CapturaFinanciera({
 export function TablaRazones({
   ejercicios, campos, razones, benchmark, onExplicar,
 }: {
-  ejercicios: string[]
+  ejercicios: Ejercicio[]
   campos: CampoFinanciero[]
   razones: Razon[]
   benchmark: BenchmarkSector
   onExplicar: () => void
 }) {
-  const porEjercicio = ejercicios.map((_, i) => valoresDelEjercicio(campos, i))
+  // Las razones sí se leen en base anual: un ROS calculado con siete meses de
+  // venta contra un capital de doce no significa nada.
+  const porEjercicio = ejercicios.map((e, i) => valoresDelEjercicio(campos, i, e.meses))
 
   return (
     <>
@@ -136,7 +186,7 @@ export function TablaRazones({
       >
         <span />
         {ejercicios.map((e, i) => (
-          <span key={e} className={`yh ${i > 0 ? 'prev' : ''}`}>{e}</span>
+          <CabezaEjercicio key={e.etiqueta} ejercicio={e} indice={i} />
         ))}
         <span className="yh">Variación</span>
         <span className="yh bm">Promedio industria</span>
@@ -201,6 +251,30 @@ export function TablaRazones({
   )
 }
 
+/**
+ * Texto editable en sitio. Se ve como texto corrido hasta que se toca, para que
+ * un reporte que el motor propuso siga leyéndose como reporte y no como
+ * formulario — pero cualquier línea se pueda corregir sin salir de la pantalla.
+ */
+export function TextoEditable({
+  valor, onChange, placeholder, clase = '',
+}: {
+  valor: string
+  onChange: (v: string) => void
+  placeholder?: string
+  clase?: string
+}) {
+  return (
+    <textarea
+      className={`edit ${clase}`}
+      value={valor}
+      placeholder={placeholder}
+      rows={1}
+      onChange={(e) => onChange(e.target.value)}
+    />
+  )
+}
+
 /* ---------- Preguntas ---------- */
 
 export function PreguntaConOpciones({
@@ -214,7 +288,7 @@ export function PreguntaConOpciones({
 }) {
   return (
     <div className="qrow">
-      <span className="qtag">{etiqueta}</span>
+      {etiqueta && <span className="qtag">{etiqueta}</span>}
       <div className="qtext">{pregunta}</div>
       <div className="opts">
         {opciones.map((o, i) => (
@@ -227,14 +301,37 @@ export function PreguntaConOpciones({
   )
 }
 
+/**
+ * Pregunta que pide una cifra. Cuando la respuesta la calculó la radiografía en
+ * lugar de darla el cliente, viene con `marca` y el campo se distingue: sigue
+ * siendo editable, pero se ve que nadie tuvo que preguntarla.
+ */
 export function PreguntaConNumero({
-  etiqueta, pregunta, valor, onChange,
-}: { etiqueta: string; pregunta: string; valor: string; onChange?: (v: string) => void }) {
+  etiqueta, pregunta, valor, marca, placeholder, onChange,
+}: {
+  etiqueta: string
+  pregunta: string
+  valor: string
+  marca?: string
+  placeholder?: string
+  onChange?: (v: string) => void
+}) {
   return (
     <div className="qrow">
-      <span className="qtag">{etiqueta}</span>
+      {(etiqueta || marca) && (
+        <span className="qtag">
+          {etiqueta}
+          {marca && <span className="qcalc">{marca}</span>}
+        </span>
+      )}
       <div className="qtext">{pregunta}</div>
-      <input className="qnum" value={valor} onChange={(e) => onChange?.(e.target.value)} readOnly={!onChange} />
+      <input
+        className={`qnum ${marca ? 'calc' : ''}`}
+        value={valor}
+        placeholder={placeholder}
+        onChange={(e) => onChange?.(e.target.value)}
+        readOnly={!onChange}
+      />
     </div>
   )
 }
@@ -250,7 +347,7 @@ export function PreguntaConTexto({
 }) {
   return (
     <div className="qrow">
-      <span className="qtag">{etiqueta}</span>
+      {etiqueta && <span className="qtag">{etiqueta}</span>}
       <div className="qtext">{pregunta}</div>
       <textarea
         value={valor}
@@ -258,41 +355,6 @@ export function PreguntaConTexto({
         onChange={(e) => onChange?.(e.target.value)}
         readOnly={!onChange}
       />
-    </div>
-  )
-}
-
-/* ---------- Hallazgo ---------- */
-
-const CLASE_SEVERIDAD: Record<Severidad, string> = {
-  critico: 'sev-crit',
-  alerta: 'sev-alt',
-  observacion: 'sev-obs',
-}
-const TEXTO_SEVERIDAD: Record<Severidad, string> = {
-  critico: 'Crítico',
-  alerta: 'Alerta',
-  observacion: 'Observación',
-}
-
-export function TarjetaHallazgo({
-  dimension, severidad, lectura, evidencia, children,
-}: {
-  dimension: string
-  severidad: Severidad
-  lectura: string
-  evidencia?: string
-  children?: ReactNode
-}) {
-  return (
-    <div className="finding">
-      <div className="finding-head">
-        <div className="finding-name">{dimension}</div>
-        <div className={`sev ${CLASE_SEVERIDAD[severidad]}`}>{TEXTO_SEVERIDAD[severidad]}</div>
-      </div>
-      <div className="finding-read">{lectura}</div>
-      {evidencia && <div className="finding-ev">{evidencia}</div>}
-      {children}
     </div>
   )
 }

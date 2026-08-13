@@ -5,13 +5,11 @@ export const PASOS: Step[] = [
   { n: '01', titulo: 'Contexto', pregunta: 'Cuéntame' },
   { n: '02', titulo: 'Problema declarado', pregunta: '¿Qué necesitas?' },
   { n: '03', titulo: 'Hipótesis del cliente', pregunta: '¿Por qué crees que pasó?' },
-  { n: '04', titulo: 'Carga de información', pregunta: 'Pásame tu info' },
-  { n: '05', titulo: 'Diagnóstico inicial', pregunta: 'Yo creo que…' },
-  { n: '06', titulo: 'Replanteamiento', pregunta: '¿Tú qué opinas?' },
-  { n: '07', titulo: 'Costo de la inacción', pregunta: 'Lo que te está costando…' },
-  { n: '08', titulo: 'Causa raíz', pregunta: 'La causa raíz es…' },
-  { n: '09', titulo: 'Plan de trabajo', pregunta: 'El plan es…' },
-  { n: '10', titulo: 'Accountability', pregunta: 'KPIs y responsables' },
+  { n: '04', titulo: 'Diagnóstico inicial', pregunta: 'Yo creo que…' },
+  { n: '05', titulo: 'Costo de la inacción', pregunta: 'Lo que te está costando…' },
+  { n: '06', titulo: 'Causa raíz', pregunta: 'La causa raíz es…' },
+  { n: '07', titulo: 'Plan de trabajo', pregunta: 'El plan es…' },
+  { n: '08', titulo: 'Accountability', pregunta: 'KPIs y responsables' },
 ]
 
 /** Carpetas de Dropbox indexadas. El conteo se reemplaza por el del indexador. */
@@ -33,14 +31,12 @@ export const REQUISITOS = [
   'Restricción real declarada',
 ] as const
 
-/** Estado de los requisitos por paso (índice 0–9). */
+/** Estado de los requisitos por paso (índice 0–7). */
 export const REQUISITOS_POR_PASO: boolean[][] = [
   [false, false, false, false],
   [true, false, false, false],
-  [true, false, false, false],
   [true, true, false, false],
   [true, true, true, false],
-  [true, true, true, true],
   [true, true, true, true],
   [true, true, true, true],
   [true, true, true, true],

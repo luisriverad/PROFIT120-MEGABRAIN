@@ -4,14 +4,15 @@ import { Sidebar } from '@/components/Sidebar'
 import { RightRail } from '@/components/RightRail'
 import { StepNav } from '@/components/StepNav'
 import { Footer } from '@/components/Footer'
+import { ExpedienteProvider } from '@/estado/Expediente'
 import {
-  Paso01Contexto, Paso02Problema, Paso03Hipotesis, Paso04Carga, Paso05Diagnostico,
-  Paso06Replanteamiento, Paso07Costo, Paso08CausaRaiz, Paso09Plan, Paso10Accountability,
+  Paso01Contexto, Paso02Problema, Paso03Hipotesis, Paso05Diagnostico,
+  Paso07Costo, Paso08CausaRaiz, Paso09Plan, Paso10Accountability,
 } from '@/components/steps'
 
 const PANTALLAS = [
-  Paso01Contexto, Paso02Problema, Paso03Hipotesis, Paso04Carga, Paso05Diagnostico,
-  Paso06Replanteamiento, Paso07Costo, Paso08CausaRaiz, Paso09Plan, Paso10Accountability,
+  Paso01Contexto, Paso02Problema, Paso03Hipotesis, Paso05Diagnostico,
+  Paso07Costo, Paso08CausaRaiz, Paso09Plan, Paso10Accountability,
 ]
 
 type Vista = 'diagnostico' | 'biblioteca' | 'expedientes'
@@ -28,6 +29,7 @@ export default function App() {
   const Pantalla = PANTALLAS[paso]
 
   return (
+    <ExpedienteProvider>
     <div className="shell">
       <TopBar />
       <div className="body-row">
@@ -42,5 +44,6 @@ export default function App() {
       </div>
       <Footer />
     </div>
+    </ExpedienteProvider>
   )
 }

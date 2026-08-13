@@ -1,16 +1,41 @@
 import { useState } from 'react'
 import { DIMENSIONES, TEMAS_DIMENSIONES } from '@/data/catalogo'
-import { DECLARACION_CLIENTE, DIMENSIONES_ACTIVAS } from '@/data/caso'
+import { DECLARACION_CLIENTE } from '@/data/caso'
 import { Card, EncabezadoPaso, NotaConsultor } from '@/components/ui/Primitivos'
+import { useExpediente } from '@/estado/Expediente'
 
+/**
+ * Cada dimensión vive en uno de tres estados:
+ *
+ *  - confirmada (verde): la marcó el consultor.
+ *  - sugerida (amarillo): el análisis a profundidad del paso 01 la dejó en
+ *    evidencia con cifras. Cuenta como marcada, pero se distingue porque no la
+ *    puso una persona.
+ *  - inactiva (gris): ni una cosa ni la otra.
+ *
+ * Un clic sobre la sugerida la descarta —el consultor no está de acuerdo— y ya
+ * no vuelve a proponerse aunque el motor insista.
+ */
 export function Paso02Problema() {
-  const [activas, setActivas] = useState<string[]>(DIMENSIONES_ACTIVAS)
-  /** Dimensión escrita a mano por tema, para lo que el catálogo no cubre. */
-  const [otros, setOtros] = useState<Record<string, string>>({})
+  const { mapa, confirmadas, setConfirmadas, descartadas, setDescartadas, otros, setOtros } = useExpediente()
   const [otrosAbiertos, setOtrosAbiertos] = useState<string[]>([])
 
-  const alternar = (d: string) =>
-    setActivas((a) => (a.includes(d) ? a.filter((x) => x !== d) : [...a, d]))
+  const sugerida = (d: string) =>
+    Boolean(mapa?.dimensionesEvidentes.includes(d))
+    && !confirmadas.includes(d)
+    && !descartadas.includes(d)
+
+  const estado = (d: string) =>
+    confirmadas.includes(d) ? 'on' : sugerida(d) ? 'sug' : ''
+
+  const alternar = (d: string) => {
+    if (confirmadas.includes(d)) setConfirmadas((a) => a.filter((x) => x !== d))
+    else if (sugerida(d)) setDescartadas((a) => [...a, d])
+    else setConfirmadas((a) => [...a, d])
+  }
+
+  const activas = DIMENSIONES.filter((d) => confirmadas.includes(d) || sugerida(d))
+  const sugeridas = DIMENSIONES.filter(sugerida).length
 
   /** Al cerrar el box se conserva lo escrito: reabrirlo no pierde el texto. */
   const alternarOtro = (n: string) =>
@@ -25,11 +50,7 @@ export function Paso02Problema() {
 
   return (
     <>
-      <EncabezadoPaso
-        paso="Paso 02 · Problema declarado"
-        titulo="¿Qué necesitas?"
-        entrada="Aquí se captura lo que el cliente cree que necesita. Se registra tal cual, sin corregirlo. La distancia entre esta declaración y el diagnóstico del paso 05 es parte del valor que se entrega."
-      />
+      <EncabezadoPaso paso="Paso 02 · Problema declarado" titulo="¿Qué necesitas?" />
 
       <NotaConsultor rotulo="Nota de método:">
         el problema declarado casi nunca es el problema. Se documenta para poder mostrarle al cliente,
@@ -62,8 +83,9 @@ export function Paso02Problema() {
                 {t.dimensiones.map((d) => (
                   <button
                     key={d}
-                    className={`chip ${activas.includes(d) ? 'on' : ''}`}
+                    className={`chip ${estado(d)}`}
                     onClick={() => alternar(d)}
+                    title={sugerida(d) ? 'La dejó en evidencia el análisis del paso 01. Un clic la descarta.' : undefined}
                   >
                     {d}
                   </button>
@@ -93,6 +115,7 @@ export function Paso02Problema() {
         <div className="tema-foot">
           <span>
             <b>{activas.length}</b> de {DIMENSIONES.length} dimensiones marcadas
+            {sugeridas > 0 && <> {' · '} <b>{sugeridas}</b> sugeridas por el análisis</>}
             {propias > 0 && <> {' · '} <b>{propias}</b> {propias === 1 ? 'propia' : 'propias'}</>}
             {' · '}
             <b>{temasSinExplorar.length}</b> {temasSinExplorar.length === 1 ? 'tema' : 'temas'} sin explorar
@@ -102,6 +125,7 @@ export function Paso02Problema() {
           )}
         </div>
       </Card>
+
     </>
   )
 }

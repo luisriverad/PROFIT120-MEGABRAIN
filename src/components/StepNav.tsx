@@ -1,8 +1,8 @@
 import { PASOS } from '@/data/catalogo'
 
 const ETIQUETA_AVANCE: Record<number, string> = {
-  5: 'Calcular costo de la inacción',
-  7: 'Construir plan de trabajo',
+  3: 'Calcular costo de la inacción',
+  5: 'Construir plan de trabajo',
 }
 
 export function StepNav({ paso, onPaso }: { paso: number; onPaso: (i: number) => void }) {
