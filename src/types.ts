@@ -6,11 +6,6 @@ export interface Step {
   pregunta: string
 }
 
-export interface Modulo {
-  nombre: string
-  archivos: number
-}
-
 /** Bloque temático del catálogo de dimensiones profundas. */
 export interface TemaDimension {
   n: string
@@ -24,6 +19,12 @@ export interface Herramienta {
   modulo: string
   porque: string
   match: number
+  /**
+   * A dónde vive la plantilla. Mientras el indexador no la resuelva, la ficha
+   * se abre igual y dice que el vínculo todavía no existe — nunca un clic que
+   * no hace nada y deja al consultor sin saber si falló.
+   */
+  url?: string
 }
 
 export type Severidad = 'critico' | 'alerta' | 'observacion'

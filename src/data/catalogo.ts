@@ -1,4 +1,4 @@
-import type { Step, Modulo, TemaDimension } from '@/types'
+import type { Step, TemaDimension } from '@/types'
 
 /** Los 10 pasos de la ruta de diagnóstico. El orden es el método. */
 export const PASOS: Step[] = [
@@ -12,16 +12,6 @@ export const PASOS: Step[] = [
   { n: '08', titulo: 'Accountability', pregunta: 'KPIs y responsables' },
 ]
 
-/** Carpetas de Dropbox indexadas. El conteo se reemplaza por el del indexador. */
-export const MODULOS: Modulo[] = [
-  { nombre: 'Estrategia', archivos: 84 },
-  { nombre: 'Finanzas', archivos: 212 },
-  { nombre: 'Formatos', archivos: 167 },
-  { nombre: 'Marketing', archivos: 96 },
-  { nombre: 'Operación', archivos: 188 },
-  { nombre: 'RRHH', archivos: 131 },
-  { nombre: 'Ventas', archivos: 154 },
-]
 
 /** Requisitos de cierre. Sin los cuatro no se habilita la cuantificación. */
 export const REQUISITOS = [

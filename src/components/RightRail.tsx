@@ -1,5 +1,42 @@
+import { useState } from 'react'
+import type { Herramienta } from '@/types'
 import { REQUISITOS, REQUISITOS_POR_PASO } from '@/data/catalogo'
 import { HERRAMIENTAS_POR_PASO } from '@/data/herramientas'
+
+/**
+ * Panel derecho: los requisitos de cierre y las herramientas que el motor
+ * propone para el paso en curso.
+ *
+ * Cada herramienta es un botón: abre la plantilla en la biblioteca. Mientras el
+ * indexador no devuelva la ruta, el clic responde diciendo que el vínculo aún no
+ * existe, que es mejor que un botón que se hunde y no pasa nada.
+ */
+function Tarjeta({ h }: { h: Herramienta }) {
+  const [aviso, setAviso] = useState(false)
+
+  const abrir = () => {
+    if (h.url) {
+      window.open(h.url, '_blank', 'noopener')
+      return
+    }
+    setAviso(true)
+    setTimeout(() => setAviso(false), 2600)
+  }
+
+  return (
+    <button className={`tool-card ${aviso ? 'avisando' : ''}`} onClick={abrir}>
+      <span className="tc-top">
+        <span className="tc-name">{h.nombre}</span>
+        <span className="tc-match">{h.match}%</span>
+      </span>
+      <span className="tc-mod">{h.modulo}</span>
+      <span className="tc-why">{h.porque}</span>
+      <span className="tc-abrir">
+        {aviso ? 'La biblioteca todavía no está conectada' : 'Abrir plantilla →'}
+      </span>
+    </button>
+  )
+}
 
 export function RightRail({ paso }: { paso: number }) {
   const estado = REQUISITOS_POR_PASO[paso]
@@ -30,16 +67,7 @@ export function RightRail({ paso }: { paso: number }) {
           carga información.
         </div>
       ) : (
-        herramientas.map((h) => (
-          <div key={h.nombre} className="tool-card">
-            <div className="tc-top">
-              <span className="tc-name">{h.nombre}</span>
-              <span className="tc-match">{h.match}%</span>
-            </div>
-            <div className="tc-mod">{h.modulo}</div>
-            <div className="tc-why">{h.porque}</div>
-          </div>
-        ))
+        herramientas.map((h) => <Tarjeta key={h.nombre} h={h} />)
       )}
     </aside>
   )

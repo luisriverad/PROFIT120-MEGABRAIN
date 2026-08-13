@@ -31,11 +31,27 @@ const CLAVE_LOCAL = 'profit120.anthropic.api-key'
  *  2. VITE_ANTHROPIC_API_KEY — llave de build, para desarrollo local.
  *  3. Lo que el consultor pegue en el modal, guardado en este navegador.
  */
-export const PROXY = (import.meta.env.VITE_IA_PROXY_URL as string | undefined) ?? ''
+const PROXY_CRUDO = (import.meta.env.VITE_IA_PROXY_URL as string | undefined)?.trim() ?? ''
+
+/**
+ * Es fácil pegar la llave en la variable del proxy: están una debajo de la otra.
+ * Si eso pasa, se ignora en lugar de mandar cada petición a una URL que en
+ * realidad es una credencial — y que además viajaría en la barra de direcciones.
+ */
+export const PROXY = PROXY_CRUDO.startsWith('sk-ant-') ? '' : PROXY_CRUDO
+
+if (PROXY_CRUDO && !PROXY) {
+  console.warn(
+    'VITE_IA_PROXY_URL trae una llave de Anthropic, no una URL. Se ignoró. ' +
+    'La llave va en VITE_ANTHROPIC_API_KEY.',
+  )
+}
 
 export function leerApiKey(): string {
-  const deBuild = import.meta.env.VITE_ANTHROPIC_API_KEY as string | undefined
+  const deBuild = (import.meta.env.VITE_ANTHROPIC_API_KEY as string | undefined)?.trim()
   if (deBuild) return deBuild
+  // Si la llave acabó en la línea del proxy, se aprovecha en lugar de fallar.
+  if (PROXY_CRUDO.startsWith('sk-ant-')) return PROXY_CRUDO
   try {
     return localStorage.getItem(CLAVE_LOCAL) ?? ''
   } catch {

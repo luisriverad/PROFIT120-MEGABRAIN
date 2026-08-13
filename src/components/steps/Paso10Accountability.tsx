@@ -6,6 +6,8 @@ import { MODELO_IA, generarAccountability } from '@/lib/ia'
 import { EncabezadoPaso } from '@/components/ui/Primitivos'
 import { BloqueIA } from '@/components/ui/BloqueIA'
 import { useExpediente } from '@/estado/Expediente'
+import { DocumentoImpreso, useImpresion } from '@/components/ui/DocumentoImpreso'
+import { exportarPPT, type DocumentoExport } from '@/lib/exportar'
 
 /**
  * Accountability.
@@ -76,6 +78,8 @@ function Kpi({ kpi, onResponsable }: { kpi: KpiSeguimiento; onResponsable: (v: s
 export function Paso10Accountability() {
   const { mapa, plan, costo, causas, trabajo, cierre, setCierre } = useExpediente()
   const [instruccion, setInstruccion] = useState('')
+  const [exportando, setExportando] = useState(false)
+  const { doc, imprimir } = useImpresion()
 
   const generar = async () => {
     const r = await generarAccountability({
@@ -99,6 +103,32 @@ export function Paso10Accountability() {
   const sinDueno = kpis.filter((k) => !k.responsable.trim()).length
   const frentes = plan?.frentes ?? []
 
+  /** El cierre completo, listo para mandar. */
+  const documento = (): DocumentoExport => ({
+    cliente: CLIENTE.razonSocial,
+    sector: CLIENTE.sector,
+    titulo: 'Cierre del diagnóstico — KPIs y responsables',
+    cierre: {
+      costoTotal: formatearCampo(costoTotal, 'mxn'),
+      frentes: frentes.length,
+      acciones: acciones.length,
+      parrafo: cierre?.cierre ?? '',
+      kpis,
+      ritmo: cierre?.ritmo ?? [],
+      senalesTempranas: cierre?.senalesTempranas ?? [],
+      riesgoDeNoSostener: cierre?.riesgoDeNoSostener ?? '',
+    },
+  })
+
+  const aPPT = async () => {
+    setExportando(true)
+    try {
+      await exportarPPT(documento())
+    } finally {
+      setExportando(false)
+    }
+  }
+
   /** Los indicadores agrupados por frente, en el orden del diagnóstico. */
   const porFrente = [
     ...frentes.map((f) => ({ frente: f.nombre, criticidad: f.criticidad, lista: kpis.filter((k) => k.frente === f.nombre) })),
@@ -108,6 +138,23 @@ export function Paso10Accountability() {
   return (
     <>
       <EncabezadoPaso paso="Paso 08 · Accountability" titulo="Los KPIs y sus responsables" />
+
+      {doc && <DocumentoImpreso doc={doc} />}
+
+      {kpis.length > 0 && (
+        <div className="exp-barra cierre-exp">
+          <span className="exp-nota">
+            El cierre completo: las cifras del diagnóstico, los indicadores con su dueño, el ritmo y
+            las señales tempranas.
+          </span>
+          <div className="exp-btns">
+            <button className="btn-ghost" onClick={() => imprimir(documento())}>Exportar a PDF</button>
+            <button className="btn-ghost" disabled={exportando} onClick={aPPT}>
+              {exportando ? 'Generando…' : 'Exportar a PPT'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* El resumen de todo lo anterior, en cuatro cifras */}
       <div className="cierre-hero">

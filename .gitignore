@@ -1,0 +1,15 @@
+# Credenciales — nunca al repositorio
+.env
+.env.*
+!.env.example
+
+# Dependencias y compilados
+node_modules/
+dist/
+
+# Artefactos de prueba
+*.build.mjs
+
+# Sistema
+.DS_Store
+*.log

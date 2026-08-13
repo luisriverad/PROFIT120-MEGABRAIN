@@ -1,4 +1,4 @@
-import type { AccionPlan, DetalleAccion } from '@/types'
+import type { AccionPlan, DetalleAccion, JuntaRitmo, KpiSeguimiento } from '@/types'
 
 /**
  * Exportación del plan de trabajo.
@@ -18,13 +18,31 @@ export interface ItemExport {
   detalle: DetalleAccion | null
 }
 
+/** El cierre del diagnóstico, cuando lo que se exporta es el paso 08. */
+export interface ResumenCierre {
+  /** Ya formateado, porque la suma se hizo en la pantalla. */
+  costoTotal: string
+  frentes: number
+  acciones: number
+  parrafo: string
+  kpis: KpiSeguimiento[]
+  ritmo: JuntaRitmo[]
+  senalesTempranas: string[]
+  riesgoDeNoSostener: string
+}
+
+/**
+ * Un documento lleva acciones del plan o el cierre, nunca los dos: son dos
+ * entregables distintos y se mandan en momentos distintos de la conversación.
+ */
 export interface DocumentoExport {
   cliente: string
   sector: string
   titulo: string
   /** La lectura del plan completo. Solo va cuando se exporta todo. */
   lectura?: string
-  items: ItemExport[]
+  items?: ItemExport[]
+  cierre?: ResumenCierre
 }
 
 const VENTANA_TEXTO: Record<string, string> = {
@@ -93,7 +111,7 @@ export async function exportarPPT(doc: DocumentoExport) {
   }
 
   /* ---- Una tanda de láminas por acción ---- */
-  for (const { accion, detalle } of doc.items) {
+  for (const { accion, detalle } of doc.items ?? []) {
     const resumen = p.addSlide()
     encabezado(resumen, `${accion.frente} · ${textoVentana(accion.ventana)}`)
     resumen.addText(accion.accion, {
@@ -199,6 +217,101 @@ export async function exportarPPT(doc: DocumentoExport) {
             { x: 0.5, y: y + 0.35, w: 9, h: 1.6, fontSize: 10, color: '3C4045', lineSpacing: 15 },
           )
         }
+      }
+    }
+  }
+
+  /* ---- Láminas del cierre ---- */
+  if (doc.cierre) {
+    const c = doc.cierre
+
+    const resumen = p.addSlide()
+    resumen.background = { color: '1F2225' }
+    resumen.addShape('rect', { x: 0, y: 0, w: '100%', h: 0.08, fill: { color: VERDE } })
+    resumen.addText(`${doc.cliente} · ${doc.sector}`.toUpperCase(), {
+      x: 0.6, y: 0.5, w: 8.8, h: 0.3, fontSize: 9, bold: true, color: VERDE, charSpacing: 1.6,
+    })
+    resumen.addText('COSTO ANUAL DE NO HACER NADA', {
+      x: 0.6, y: 1.1, w: 5, h: 0.3, fontSize: 9, bold: true, color: '8A8F93', charSpacing: 1.2,
+    })
+    resumen.addText(c.costoTotal, {
+      x: 0.6, y: 1.4, w: 5, h: 0.9, fontSize: 40, bold: true, color: VERDE,
+    })
+    const cifras: [string, string][] = [
+      ['FRENTES', String(c.frentes)],
+      ['ACCIONES EN 90 DÍAS', String(c.acciones)],
+      ['INDICADORES', String(c.kpis.length)],
+    ]
+    cifras.forEach(([l, v], i) => {
+      resumen.addText(l, {
+        x: 6.0, y: 1.15 + i * 0.75, w: 3.4, h: 0.25, fontSize: 8, bold: true, color: '8A8F93', charSpacing: 1.2,
+      })
+      resumen.addText(v, {
+        x: 6.0, y: 1.38 + i * 0.75, w: 3.4, h: 0.4, fontSize: 20, bold: true, color: 'FFFFFF',
+      })
+    })
+    resumen.addText(c.parrafo, {
+      x: 0.6, y: 3.5, w: 8.8, h: 1.7, fontSize: 10.5, color: 'D6D9DA', lineSpacing: 17,
+    })
+
+    if (c.kpis.length) {
+      const tablero = p.addSlide()
+      encabezado(tablero, 'Lo que queda medido')
+      tablero.addText('Indicadores y sus responsables', {
+        x: 0.5, y: 0.7, w: 9, h: 0.4, fontSize: 20, bold: true, color: TINTA,
+      })
+      tablero.addTable(
+        [
+          ['Indicador', 'Hoy', 'Meta 90 días', 'Frec.', 'Responsable'].map((t) => ({
+            text: t, options: { bold: true, fill: { color: 'F6F7F6' } },
+          })),
+          ...c.kpis.map((k) => [
+            { text: k.indicador }, { text: k.base }, { text: k.meta, options: { bold: true } },
+            { text: k.frecuencia }, { text: k.responsable || 'Sin dueño' },
+          ]),
+        ],
+        {
+          x: 0.5, y: 1.25, w: 9, fontSize: 9.5, color: TINTA, valign: 'middle',
+          border: { pt: 0.5, color: 'E3E5E4' }, colW: [3.1, 1.4, 1.6, 1.0, 1.9],
+        },
+      )
+    }
+
+    if (c.ritmo.length) {
+      const ritmo = p.addSlide()
+      encabezado(ritmo, 'El ritmo que lo sostiene')
+      let y = 0.8
+      for (const j of c.ritmo) {
+        ritmo.addShape('rect', { x: 0.5, y, w: 9, h: 1.05, fill: { color: 'FAFBFA' }, line: { color: 'E3E5E4', width: 1 } })
+        ritmo.addText(j.junta, { x: 0.7, y: y + 0.1, w: 5.5, h: 0.3, fontSize: 13, bold: true, color: TINTA })
+        ritmo.addText(j.cuando, { x: 6.3, y: y + 0.12, w: 3, h: 0.28, fontSize: 10, bold: true, color: '3F7A25', align: 'right' })
+        ritmo.addText(`${j.asistentes} — ${j.proposito}`, {
+          x: 0.7, y: y + 0.42, w: 8.6, h: 0.55, fontSize: 9.5, color: '3C4045', lineSpacing: 13,
+        })
+        y += 1.2
+      }
+    }
+
+    if (c.senalesTempranas.length || c.riesgoDeNoSostener) {
+      const cierre = p.addSlide()
+      encabezado(cierre, 'Señales tempranas y riesgo de no sostener')
+      if (c.senalesTempranas.length) {
+        cierre.addText('Qué mirar en las primeras semanas', {
+          x: 0.5, y: 0.75, w: 9, h: 0.3, fontSize: 12, bold: true, color: VERDE, charSpacing: 1,
+        })
+        cierre.addText(
+          c.senalesTempranas.map((t, i) => ({ text: `${i + 1}. ${t}`, options: { breakLine: true } })),
+          { x: 0.5, y: 1.1, w: 9, h: 2.2, fontSize: 10.5, color: TINTA, lineSpacing: 16 },
+        )
+      }
+      if (c.riesgoDeNoSostener) {
+        cierre.addShape('rect', { x: 0.5, y: 3.45, w: 9, h: 1.5, fill: { color: 'FBF0EF' }, line: { color: 'E9C9C6', width: 1 } })
+        cierre.addText('SI EL RITMO SE ABANDONA', {
+          x: 0.7, y: 3.6, w: 8.6, h: 0.25, fontSize: 8.5, bold: true, color: 'B23A32', charSpacing: 1.2,
+        })
+        cierre.addText(c.riesgoDeNoSostener, {
+          x: 0.7, y: 3.85, w: 8.6, h: 1.0, fontSize: 9.5, color: '3C4045', lineSpacing: 14,
+        })
       }
     }
   }

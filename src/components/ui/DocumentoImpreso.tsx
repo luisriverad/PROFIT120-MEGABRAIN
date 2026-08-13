@@ -26,7 +26,7 @@ export function DocumentoImpreso({ doc }: { doc: DocumentoExport }) {
         {doc.lectura && <p className="imp-lectura">{doc.lectura}</p>}
       </div>
 
-      {doc.items.map(({ accion, detalle }) => (
+      {(doc.items ?? []).map(({ accion, detalle }) => (
         <section key={accion.id} className="imp-accion">
           <div className="imp-eyebrow">{accion.frente} · {textoVentana(accion.ventana)}</div>
           <h2 className="imp-h2">{accion.accion}</h2>
@@ -120,6 +120,76 @@ export function DocumentoImpreso({ doc }: { doc: DocumentoExport }) {
           )}
         </section>
       ))}
+
+      {doc.cierre && (
+        <section className="imp-accion">
+          <div className="imp-eyebrow">Cierre del diagnóstico</div>
+          <h2 className="imp-h2">Lo que queda medido y con quién</h2>
+
+          <table className="imp-kpis">
+            <tbody>
+              <tr><th>Costo anual de no hacer nada</th><th>Frentes</th><th>Acciones en 90 días</th></tr>
+              <tr>
+                <td>{doc.cierre.costoTotal}</td>
+                <td>{doc.cierre.frentes}</td>
+                <td>{doc.cierre.acciones}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p className="imp-p">{doc.cierre.parrafo}</p>
+
+          {doc.cierre.kpis.length > 0 && (
+            <>
+              <h3 className="imp-h3">Indicadores y responsables</h3>
+              <table className="imp-tabla">
+                <thead>
+                  <tr><th>Indicador</th><th>Hoy</th><th>Meta 90 días</th><th>Frec.</th><th>Responsable</th></tr>
+                </thead>
+                <tbody>
+                  {doc.cierre.kpis.map((k) => (
+                    <tr key={k.indicador}>
+                      <td>{k.indicador}</td>
+                      <td>{k.base}</td>
+                      <td><b>{k.meta}</b></td>
+                      <td>{k.frecuencia}</td>
+                      <td>{k.responsable || 'Sin dueño'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          )}
+
+          {doc.cierre.ritmo.length > 0 && (
+            <>
+              <h3 className="imp-h3">El ritmo que lo sostiene</h3>
+              {doc.cierre.ritmo.map((j) => (
+                <p key={j.junta} className="imp-p">
+                  <b>{j.junta}</b> · {j.cuando}<br />
+                  {j.asistentes}<br />
+                  {j.proposito}
+                </p>
+              ))}
+            </>
+          )}
+
+          {doc.cierre.senalesTempranas.length > 0 && (
+            <>
+              <h3 className="imp-h3">Señales tempranas</h3>
+              <ol className="imp-ol">
+                {doc.cierre.senalesTempranas.map((t, i) => <li key={i}>{t}</li>)}
+              </ol>
+            </>
+          )}
+
+          {doc.cierre.riesgoDeNoSostener && (
+            <>
+              <h3 className="imp-h3">Si el ritmo se abandona</h3>
+              <p className="imp-p">{doc.cierre.riesgoDeNoSostener}</p>
+            </>
+          )}
+        </section>
+      )}
 
       <div className="imp-pie">
         PROFIT120 · {doc.cliente} · Documento de trabajo. Los mensajes de encargo no forman parte de

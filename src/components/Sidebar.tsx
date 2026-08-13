@@ -1,4 +1,4 @@
-import { MODULOS, PASOS } from '@/data/catalogo'
+import { PASOS } from '@/data/catalogo'
 
 type Vista = 'diagnostico' | 'biblioteca' | 'expedientes'
 
@@ -40,16 +40,6 @@ export function Sidebar({
         ))}
       </nav>
 
-      <div className="side-divider" />
-      <div className="side-sec"><div className="side-label">Biblioteca indexada</div></div>
-      <div className="mod-list">
-        {MODULOS.map((m) => (
-          <button key={m.nombre} className="mod-item">
-            <span>{m.nombre}</span>
-            <span className="ct">{m.archivos}</span>
-          </button>
-        ))}
-      </div>
     </aside>
   )
 }
