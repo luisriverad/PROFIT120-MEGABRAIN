@@ -1,5 +1,5 @@
 import { TEMAS_DIMENSIONES } from '@/data/catalogo'
-import { CLIENTE, DECLARACION_CLIENTE } from '@/data/caso'
+import { DECLARACION_CLIENTE } from '@/data/caso'
 import { EncabezadoPaso } from '@/components/ui/Primitivos'
 import { PlanArranque } from '@/components/ui/PlanArranque'
 import { useExpediente } from '@/estado/Expediente'
@@ -12,7 +12,7 @@ import { useExpediente } from '@/estado/Expediente'
  * en orden. Es el "yo creo que…" del método, ya sostenido con cifras.
  */
 export function Paso05Diagnostico() {
-  const { mapa, plan, setPlan, confirmadas, descartadas, otros } = useExpediente()
+  const { cliente, mapa, plan, setPlan, confirmadas, descartadas, otros } = useExpediente()
 
   const sugerida = (d: string) =>
     Boolean(mapa?.dimensionesEvidentes.includes(d))
@@ -38,7 +38,7 @@ export function Paso05Diagnostico() {
       <EncabezadoPaso paso="Paso 04 · Diagnóstico inicial" titulo="Yo creo que…" />
 
       <PlanArranque
-        cliente={CLIENTE}
+        cliente={cliente}
         declaracion={DECLARACION_CLIENTE}
         dimensiones={dimensiones}
         propias={propias}

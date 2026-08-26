@@ -65,6 +65,23 @@ export function CampoLista({
   )
 }
 
+/** Campo de texto largo. Mismo envoltorio que Campo, con caja alta. */
+export function CampoTexto({
+  etiqueta, valor, placeholder, onChange,
+}: { etiqueta: string; valor: string; placeholder?: string; onChange?: (v: string) => void }) {
+  return (
+    <div className="field">
+      <label>{etiqueta}</label>
+      <textarea
+        value={valor}
+        placeholder={placeholder}
+        onChange={(e) => onChange?.(e.target.value)}
+        readOnly={!onChange}
+      />
+    </div>
+  )
+}
+
 const MESES = [
   'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
   'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',

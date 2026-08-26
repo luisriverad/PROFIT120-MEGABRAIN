@@ -1,22 +1,62 @@
 import type {
-  CampoFinanciero, FilaTendencia,
+  CampoFinanciero, DesempenoArea, FichaCliente, FilaTendencia,
   Accountability, BateriaContexto, CausasRaiz, CostoInaccion, DetalleAccion, Ejercicio, MapaRiesgos,
   PlanArranque, PlanTrabajo, PreguntaNumero,
   PreguntaOpciones, PreguntaTexto,
 } from '@/types'
+import { AREAS_DESEMPENO } from '@/data/catalogo'
 
 /**
  * CASO DEMOSTRATIVO. Todo lo de este archivo es contenido de ejemplo
  * para ver el motor lleno. Se reemplaza por el expediente real del cliente.
  */
 
-export const CLIENTE = {
+/** Cómo calificó sus áreas el cliente del caso demostrativo. */
+const DESEMPENO_DEMO: Record<string, Partial<DesempenoArea>> = {
+  Finanzas: { efectivo: true, desempeno: '55' },
+  Operaciones: { efectivo: true, desempeno: '60' },
+  Comercial: { estrategia: true, desempeno: '70' },
+  RH: { desempeno: '65' },
+}
+
+export const CLIENTE: FichaCliente = {
+  contactoNombre: 'Carlos Mendoza',
+  contactoCargo: 'Director General y socio fundador',
   razonSocial: 'Manufacturas del Norte, S.A. de C.V.',
   sector: 'Manufactura y metalmecánica',
   aniosOperacion: '23',
+  ubicacion: 'Monterrey, Nuevo León',
+  empleados: '140',
+  facturacionAnual: '$180,000,000',
+  ubicaciones: '2 plantas · 1 centro de distribución',
+  ebitda: '4.7',
+  crecimiento: 'Creció',
+  variacion: '18',
   clientes80: '6',
   lineasActivas: '11',
-  resumenBarra: 'Metalmecánica · $180M · 140 empleados',
+  cobertura: 'Nacional y exportación',
+  exportacion: '18',
+  canalPrincipal: 'Venta directa',
+  estacionalidad: 'Moderada',
+  sistema: 'SAP Business One',
+  contabilidad: 'Interna sin auditar',
+  ultimoCierre: 'Julio 2026',
+  // Las cuatro áreas salen del catálogo: si ahí se agrega una, aquí aparece
+  // vacía en lugar de faltar en la tabla.
+  areas: AREAS_DESEMPENO.map((area) => ({
+    area,
+    efectivo: false,
+    estrategia: false,
+    desempeno: '',
+    ...DESEMPENO_DEMO[area],
+  })),
+  actividad: 'Fabricamos estructura metálica y piezas maquinadas a pedido para armadoras, '
+    + 'constructoras y empresas de energía. Trabajamos contra plano del cliente, con dos plantas '
+    + 'y un centro de distribución.',
+  diferenciador: 'Entregamos series cortas con tolerancias que el taller promedio no sostiene, y '
+    + 'aguantamos cambios de ingeniería a media corrida sin reprogramar toda la planta.',
+  anotaciones: 'Refinanciaron pasivo bancario hace ocho meses. Entró un socio minoritario el año '
+    + 'pasado y pide reportes mensuales que hoy nadie arma.',
 }
 
 /**

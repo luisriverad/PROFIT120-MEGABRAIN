@@ -1,13 +1,12 @@
-import { Fragment, useState } from 'react'
-import { SECTORES } from '@/data/catalogo'
+import { Fragment, useEffect, useState } from 'react'
 import {
-  ANTECEDENTE, CLIENTE, ESTRUCTURA_DECISION, TENDENCIAS,
+  ANTECEDENTE, ESTRUCTURA_DECISION, TENDENCIAS,
 } from '@/data/caso'
 import { RAZONES, parsearCampo } from '@/data/finanzas'
 import { benchmarkDelSector } from '@/data/benchmarks'
 import type { BenchmarkRazon, Razon, Tendencia } from '@/types'
 import {
-  Campo, CampoLista, CapturaFinanciera, Card, EncabezadoPaso, NotaConsultor,
+  CapturaFinanciera, Card, EncabezadoPaso, NotaConsultor,
   PreguntaConOpciones, PreguntaConTexto, TablaRazones,
 } from '@/components/ui/Primitivos'
 import { ModalPromedio } from '@/components/ui/ModalPromedio'
@@ -23,9 +22,9 @@ const OPCIONES_TENDENCIA: { texto: string; clave: Tendencia }[] = [
 ]
 
 export function Paso01Contexto() {
-  const { campos, setCampos, ejercicios, setEjercicios, mapa, setMapa } = useExpediente()
+  const { cliente, campos, setCampos, ejercicios, setEjercicios, mapa, setMapa } = useExpediente()
   const [tendencias, setTendencias] = useState(TENDENCIAS)
-  const [sector, setSector] = useState(CLIENTE.sector)
+  const sector = cliente.sector
   /** Recálculos que la IA aplicó encima de la base precargada del sector. */
   const [ajustes, setAjustes] = useState<Record<string, BenchmarkRazon>>({})
   /** Grupo de razones abierto en la ventana de explicación, si hay alguno. */
@@ -42,11 +41,9 @@ export function Paso01Contexto() {
   const responder = (i: number, seleccion: number) =>
     setDecision((ps) => ps.map((p, j) => (j === i ? { ...p, seleccion } : p)))
 
-  const cambiarSector = (nuevo: string) => {
-    setSector(nuevo)
-    // Los ajustes eran del sector anterior: mantenerlos mezclaría industrias.
-    setAjustes({})
-  }
+  // El sector se cambia en la ficha de la barra lateral. Cuando cambia, los
+  // ajustes eran del sector anterior: mantenerlos mezclaría industrias.
+  useEffect(() => { setAjustes({}) }, [sector])
 
   const marcar = (i: number, valor: Tendencia) =>
     setTendencias((t) => t.map((f, j) => (j === i ? { ...f, valor } : f)))
@@ -70,19 +67,7 @@ export function Paso01Contexto() {
 
   return (
     <>
-      <EncabezadoPaso paso="Paso 01 · Contexto" titulo="Cuéntame" />
-
-      <Card titulo="Expediente del cliente">
-        <div className="grid3">
-          <Campo etiqueta="Razón social" valor={CLIENTE.razonSocial} />
-          <CampoLista etiqueta="Sector" valor={sector} opciones={SECTORES} onChange={cambiarSector} />
-          <Campo etiqueta="Años de operación" valor={CLIENTE.aniosOperacion} />
-        </div>
-        <div className="grid2">
-          <Campo etiqueta="Clientes que hacen el 80% de la venta" valor={CLIENTE.clientes80} />
-          <Campo etiqueta="Líneas de productos activas / Unidades de negocio activas" valor={CLIENTE.lineasActivas} />
-        </div>
-      </Card>
+      <EncabezadoPaso paso="Paso 01 · Contexto y análisis financiero" titulo="Cuéntame" />
 
       <Card titulo="Radiografía financiera">
         {/*
@@ -165,7 +150,7 @@ export function Paso01Contexto() {
 
             {/* El diagnóstico calcula; esto interpreta. Cierra el paso. */}
             <AnalisisProfundidad
-              cliente={CLIENTE}
+              cliente={cliente}
               ejercicios={ejercicios}
               campos={campos}
               razones={RAZONES}

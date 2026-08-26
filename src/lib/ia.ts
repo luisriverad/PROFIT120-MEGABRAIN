@@ -2,7 +2,8 @@ import type Anthropic from '@anthropic-ai/sdk'
 import type {
   AccionPlan, Accountability, BateriaContexto, BenchmarkSector, CadenaCausal, CampoFinanciero,
   CausasRaiz,
-  CostoInaccion, DetalleAccion, DiagnosticoTema, Ejercicio, ExplicacionPromedio, MapaRiesgos,
+  CostoInaccion, DetalleAccion, DiagnosticoTema, Ejercicio, ExplicacionPromedio, FichaCliente,
+  MapaRiesgos,
   PlanArranque, PlanTrabajo, PreguntaGenerada, Razon, TurnoIA,
 } from '@/types'
 import {
@@ -410,9 +411,74 @@ Cómo trabajas:
 - Marcas las dimensiones que los números ya dejan en evidencia, escogiéndolas del catálogo que viene en la petición y copiando el texto exacto. Solo las que puedas sostener con una cifra: el consultor marcará a mano las que dependan de lo que vea en piso o escuche en entrevista, y una dimensión sugerida de más le cuesta más trabajo que una de menos.
 - Escribes en español de México, para el dueño de una empresa mediana. Directo, sin jerga innecesaria, sin adjetivos de relleno y sin suavizar el diagnóstico. Nada de recomendaciones genéricas tipo "mejorar la eficiencia": el primer movimiento tiene que ser algo que alguien pueda hacer el lunes.`
 
+/**
+ * La ficha técnica en texto, tal como la ve el modelo. Un mismo número se lee
+ * distinto según de dónde salga: una concentración de clientes pesa distinto si
+ * la venta es de exportación, y una cifra sin auditar no sostiene la misma
+ * conversación que una dictaminada. Por eso va completa en cada petición.
+ */
+function fichaEnPrompt(c: FichaCliente): string[] {
+  const linea = (partes: (string | false)[]) => partes.filter(Boolean).join(' · ')
+  return [
+    `EMPRESA: ${c.razonSocial}`,
+    linea([
+      `Sector: ${c.sector}`,
+      Boolean(c.aniosOperacion) && `${c.aniosOperacion} años de operación`,
+      Boolean(c.empleados) && `${c.empleados} empleados`,
+      Boolean(c.facturacionAnual) && `${c.facturacionAnual} de facturación anual`,
+      Boolean(c.ubicaciones) && c.ubicaciones,
+    ]),
+    linea([
+      `Mercado: ${c.clientes80} clientes concentran el 80% de la venta`,
+      `${c.lineasActivas} líneas o unidades de negocio activas`,
+      Boolean(c.cobertura) && `cobertura ${c.cobertura.toLowerCase()}`,
+      Boolean(c.exportacion) && `${c.exportacion}% de la venta exportada`,
+      Boolean(c.canalPrincipal) && `canal principal ${c.canalPrincipal.toLowerCase()}`,
+      Boolean(c.estacionalidad) && `estacionalidad ${c.estacionalidad.toLowerCase()}`,
+    ]),
+    linea([
+      'Origen de las cifras:',
+      Boolean(c.sistema) && c.sistema,
+      Boolean(c.contabilidad) && `contabilidad ${c.contabilidad.toLowerCase()}`,
+      Boolean(c.ultimoCierre) && `último cierre disponible ${c.ultimoCierre}`,
+    ]),
+    linea([
+      'Lo que el cliente dice de su último año:',
+      Boolean(c.ebitda) && `EBITDA ${c.ebitda}%`,
+      Boolean(c.crecimiento) && `${c.crecimiento.toLowerCase()} ${c.variacion ? `${c.variacion}%` : ''}`.trim(),
+    ]),
+    Boolean(c.contactoNombre) && `INTERLOCUTOR: ${c.contactoNombre}${c.contactoCargo ? ` — ${c.contactoCargo}` : ''}`,
+    Boolean(c.actividad) && `A QUÉ SE DEDICA, EN SUS PALABRAS: ${c.actividad}`,
+    Boolean(c.diferenciador) && `LO QUE DICE QUE LA DIFERENCIA: ${c.diferenciador}`,
+    dolor(c),
+    Boolean(c.anotaciones) && `ANOTACIONES DEL CONSULTOR: ${c.anotaciones}`,
+  ].filter(Boolean) as string[]
+}
+
+/**
+ * Dónde dice el cliente que le duele, por área. Va antes que cualquier cifra
+ * porque es su lectura, no la de los números: cuando las dos no coinciden, esa
+ * distancia es el hallazgo.
+ */
+function dolor(c: FichaCliente): string {
+  const marcadas = c.areas.filter((a) => a.efectivo || a.estrategia)
+  const califica = c.areas
+    .filter((a) => a.desempeno)
+    .map((a) => `${a.area} ${a.desempeno}%`)
+    .join(' · ')
+  if (!marcadas.length && !califica) return ''
+  const duelen = marcadas
+    .map((a) => `${a.area} (${[a.efectivo && 'ejecución', a.estrategia && 'estrategia'].filter(Boolean).join(' y ')})`)
+    .join(' · ')
+  return [
+    marcadas.length ? `DONDE DICE QUE MÁS LE DUELE: ${duelen}` : '',
+    califica ? `Desempeño que se pone por área: ${califica}` : '',
+  ].filter(Boolean).join('\n')
+}
+
 /** Arma el expediente completo en texto: lo capturado y lo calculado. */
 function armarExpediente(p: {
-  cliente: { razonSocial: string; sector: string; aniosOperacion: string; clientes80: string; lineasActivas: string }
+  cliente: FichaCliente
   ejercicios: Ejercicio[]
   campos: CampoFinanciero[]
   razones: Razon[]
@@ -451,9 +517,7 @@ function armarExpediente(p: {
   const mtd = ejercicios.find((e) => e.enCurso)
 
   return [
-    `EMPRESA: ${cliente.razonSocial}`,
-    `Sector: ${cliente.sector} · ${cliente.aniosOperacion} años de operación`,
-    `${cliente.clientes80} clientes concentran el 80% de la venta · ${cliente.lineasActivas} líneas o unidades de negocio activas`,
+    ...fichaEnPrompt(cliente),
     '',
     'RADIOGRAFÍA FINANCIERA — cifras tal como ocurrieron en cada periodo, sin anualizar:',
     datos,
@@ -479,7 +543,7 @@ function armarExpediente(p: {
  * `instruccion` deja al consultor pedir un ángulo específico.
  */
 export async function analizarProfundidad(p: {
-  cliente: { razonSocial: string; sector: string; aniosOperacion: string; clientes80: string; lineasActivas: string }
+  cliente: FichaCliente
   ejercicios: Ejercicio[]
   campos: CampoFinanciero[]
   razones: Razon[]
@@ -597,7 +661,7 @@ Cómo decides:
  * frentes por donde arranca el trabajo.
  */
 export async function priorizarFrentes(p: {
-  cliente: { razonSocial: string; sector: string; aniosOperacion: string; clientes80: string; lineasActivas: string }
+  cliente: FichaCliente
   declaracion: string
   dimensiones: { nombre: string; tema: string; origen: 'consultor' | 'motor' }[]
   propias: { tema: string; texto: string }[]
@@ -624,9 +688,7 @@ export async function priorizarFrentes(p: {
     : 'Todavía no se corrió el análisis a profundidad: prioriza solo con las dimensiones marcadas y dilo en la lectura.'
 
   const expediente = [
-    `EMPRESA: ${p.cliente.razonSocial}`,
-    `Sector: ${p.cliente.sector} · ${p.cliente.aniosOperacion} años de operación`,
-    `${p.cliente.clientes80} clientes concentran el 80% de la venta · ${p.cliente.lineasActivas} líneas o unidades de negocio activas`,
+    ...fichaEnPrompt(p.cliente),
     '',
     `LO QUE EL CLIENTE PIDIÓ, EN SUS PALABRAS: ${p.declaracion}`,
     '',
@@ -728,7 +790,7 @@ Cómo la construyes:
 
 /** Escribe la batería del paso 03 a partir del plan y del mapa de riesgos. */
 export async function generarBateria(p: {
-  cliente: { razonSocial: string; sector: string; aniosOperacion: string; clientes80: string; lineasActivas: string }
+  cliente: FichaCliente
   declaracion: string
   plan: PlanArranque | null
   mapa: MapaRiesgos | null
@@ -753,9 +815,7 @@ export async function generarBateria(p: {
     : ''
 
   const expediente = [
-    `EMPRESA: ${p.cliente.razonSocial}`,
-    `Sector: ${p.cliente.sector} · ${p.cliente.aniosOperacion} años de operación`,
-    `${p.cliente.clientes80} clientes concentran el 80% de la venta · ${p.cliente.lineasActivas} líneas o unidades de negocio activas`,
+    ...fichaEnPrompt(p.cliente),
     '',
     `LO QUE EL CLIENTE PIDIÓ, EN SUS PALABRAS: ${p.declaracion}`,
     '',
@@ -797,7 +857,7 @@ export async function generarBateria(p: {
 /* ================================================================ */
 
 interface Contexto {
-  cliente: { razonSocial: string; sector: string; aniosOperacion: string; clientes80: string; lineasActivas: string }
+  cliente: FichaCliente
   plan: PlanArranque | null
   mapa: MapaRiesgos | null
   tema: string
@@ -985,7 +1045,7 @@ Cómo cuantificas:
 
 /** Le pone pesos a cada frente del diagnóstico. El total lo suma el motor. */
 export async function cuantificarInaccion(p: {
-  cliente: { razonSocial: string; sector: string; aniosOperacion: string; clientes80: string; lineasActivas: string }
+  cliente: FichaCliente
   declaracion: string
   plan: PlanArranque | null
   mapa: MapaRiesgos | null
@@ -1028,8 +1088,7 @@ export async function cuantificarInaccion(p: {
   const contestadas = Object.entries(p.respuestas).filter(([, v]) => v.trim())
 
   const expediente = [
-    `EMPRESA: ${p.cliente.razonSocial} · ${p.cliente.sector}`,
-    `${p.cliente.clientes80} clientes concentran el 80% de la venta · ${p.cliente.lineasActivas} líneas activas`,
+    ...fichaEnPrompt(p.cliente),
     '',
     `LO QUE EL CLIENTE PIDIÓ: ${p.declaracion}`,
     '',
@@ -1124,7 +1183,7 @@ Cómo bajas la cadena:
 
 /** Baja la cadena de causalidad de cada frente y de cada tema abierto. */
 export async function analizarCausaRaiz(p: {
-  cliente: { razonSocial: string; sector: string; aniosOperacion: string; clientes80: string; lineasActivas: string }
+  cliente: FichaCliente
   declaracion: string
   plan: PlanArranque | null
   mapa: MapaRiesgos | null
@@ -1197,7 +1256,7 @@ export async function analizarCausaRaiz(p: {
  * causa raíz que ya no se seguía de sus premisas.
  */
 export async function recalcularCadena(p: {
-  cliente: { razonSocial: string; sector: string }
+  cliente: FichaCliente
   plan: PlanArranque | null
   mapa: MapaRiesgos | null
   respuestas: Record<string, string>
@@ -1330,7 +1389,7 @@ Reglas:
 
 /** Reparte el trabajo de los tres frentes en las cuatro ventanas. */
 export async function generarPlanTrabajo(p: {
-  cliente: { razonSocial: string; sector: string; aniosOperacion: string; clientes80: string; lineasActivas: string }
+  cliente: FichaCliente
   plan: PlanArranque | null
   costo: CostoInaccion | null
   causas: CausasRaiz | null
@@ -1355,8 +1414,7 @@ export async function generarPlanTrabajo(p: {
   const contestadas = Object.entries(p.respuestas).filter(([, v]) => v.trim())
 
   const expediente = [
-    `EMPRESA: ${p.cliente.razonSocial} · ${p.cliente.sector}`,
-    `${p.cliente.clientes80} clientes concentran el 80% de la venta · ${p.cliente.lineasActivas} líneas activas`,
+    ...fichaEnPrompt(p.cliente),
     '',
     'FRENTES DEL DIAGNÓSTICO:',
     frentes,
@@ -1514,7 +1572,7 @@ Cómo lo entregas:
 
 /** Aterriza una acción del plan hasta el instructivo y los mensajes. */
 export async function detallarAccion(p: {
-  cliente: { razonSocial: string; sector: string }
+  cliente: FichaCliente
   accion: AccionPlan
   plan: PlanArranque | null
   causas: CausasRaiz | null
@@ -1638,7 +1696,7 @@ Cómo cierras:
 
 /** Arma el cierre con todo lo que se acumuló en el expediente. */
 export async function generarAccountability(p: {
-  cliente: { razonSocial: string; sector: string }
+  cliente: FichaCliente
   declaracion: string
   mapa: MapaRiesgos | null
   plan: PlanArranque | null

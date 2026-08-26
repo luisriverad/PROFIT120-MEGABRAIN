@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { CadenaCausal } from '@/types'
-import { CLIENTE, DECLARACION_CLIENTE } from '@/data/caso'
+import { DECLARACION_CLIENTE } from '@/data/caso'
 import { MODELO_IA, analizarCausaRaiz, hayCredencial, recalcularCadena } from '@/lib/ia'
 import { ProgresoIA } from '@/components/ui/ProgresoIA'
 import { EncabezadoPaso, NotaConsultor } from '@/components/ui/Primitivos'
@@ -200,7 +200,7 @@ function Cadena({
 }
 
 export function Paso08CausaRaiz() {
-  const { plan, mapa, costo, temas, respuestas, causas, setCausas } = useExpediente()
+  const { cliente, plan, mapa, costo, temas, respuestas, causas, setCausas } = useExpediente()
   const [instruccion, setInstruccion] = useState('')
   /** Qué renglón, de qué cadena, está abierto a edición. */
   const [editando, setEditando] = useState<{ id: string; campo: Campo } | null>(null)
@@ -210,7 +210,7 @@ export function Paso08CausaRaiz() {
   const generar = async () => {
     setCausas(() => null)
     const r = await analizarCausaRaiz({
-      cliente: CLIENTE,
+      cliente: cliente,
       declaracion: DECLARACION_CLIENTE,
       plan,
       mapa,
@@ -261,7 +261,7 @@ export function Paso08CausaRaiz() {
     setErrorRe('')
     try {
       const r = await recalcularCadena({
-        cliente: CLIENTE, plan, mapa, respuestas, cadena, conservar,
+        cliente: cliente, plan, mapa, respuestas, cadena, conservar,
       })
       setCausas((c) => (c ? {
         ...c,

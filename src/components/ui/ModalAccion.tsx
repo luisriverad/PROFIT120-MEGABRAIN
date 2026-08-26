@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import type { AccionPlan, DetalleAccion } from '@/types'
-import { CLIENTE } from '@/data/caso'
 import { detallarAccion, hayCredencial } from '@/lib/ia'
 import { LlaveIA } from '@/components/ui/LlaveIA'
 import { ProgresoIA } from '@/components/ui/ProgresoIA'
@@ -38,7 +37,7 @@ const CANALES = [
 type Canal = typeof CANALES[number]['clave']
 
 export function ModalAccion({ accion, onCerrar }: { accion: AccionPlan; onCerrar: () => void }) {
-  const { plan, causas, costo, mapa, respuestas, detalles, setDetalles } = useExpediente()
+  const { cliente, plan, causas, costo, mapa, respuestas, detalles, setDetalles } = useExpediente()
   const detalle = detalles[accion.id] ?? null
 
   const [cargando, setCargando] = useState(false)
@@ -61,7 +60,7 @@ export function ModalAccion({ accion, onCerrar }: { accion: AccionPlan; onCerrar
     setError('')
     try {
       const d = await detallarAccion({
-        cliente: CLIENTE, accion, plan, causas, costo, mapa, respuestas,
+        cliente: cliente, accion, plan, causas, costo, mapa, respuestas,
       })
       setDetalles((x) => ({ ...x, [accion.id]: d }))
     } catch (e) {
@@ -73,8 +72,8 @@ export function ModalAccion({ accion, onCerrar }: { accion: AccionPlan; onCerrar
 
   /** El mismo documento que la tarjeta del tablero, con esta sola acción. */
   const documento = () => ({
-    cliente: CLIENTE.razonSocial,
-    sector: CLIENTE.sector,
+    cliente: cliente.razonSocial,
+    sector: cliente.sector,
     titulo: accion.accion,
     items: [{ accion, detalle }],
   })

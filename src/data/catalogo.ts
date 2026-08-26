@@ -2,8 +2,8 @@ import type { Step, TemaDimension } from '@/types'
 
 /** Los 10 pasos de la ruta de diagnóstico. El orden es el método. */
 export const PASOS: Step[] = [
-  { n: '01', titulo: 'Contexto', pregunta: 'Cuéntame' },
-  { n: '02', titulo: 'Problema declarado', pregunta: '¿Qué necesitas?' },
+  { n: '01', titulo: 'Contexto y análisis financiero', pregunta: 'Cuéntame' },
+  { n: '02', titulo: 'Declaración de problema', pregunta: '¿Qué necesitas?' },
   { n: '03', titulo: 'Hipótesis del cliente', pregunta: '¿Por qué crees que pasó?' },
   { n: '04', titulo: 'Diagnóstico inicial', pregunta: 'Yo creo que…' },
   { n: '05', titulo: 'Costo de la inacción', pregunta: 'Lo que te está costando…' },
@@ -144,4 +144,58 @@ export const SECTORES = [
   'Tecnología y software',
   'Turismo, hotelería y restaurantes',
   'Servicios profesionales y consultoría',
+] as const
+
+/* -------------------------------------------------------------------------
+   Opciones cerradas de la ficha técnica del cliente.
+   Van cerradas y no como texto libre porque cada una cambia cómo se lee un
+   mismo número: una venta concentrada en distribuidores no se corrige igual
+   que una concentrada en venta directa, y una contabilidad sin auditar no
+   sostiene la misma conversación que una dictaminada.
+   ------------------------------------------------------------------------- */
+
+export const COBERTURAS = [
+  'Local',
+  'Regional',
+  'Nacional',
+  'Nacional y exportación',
+  'Principalmente exportación',
+] as const
+
+export const CANALES_VENTA = [
+  'Venta directa',
+  'Distribuidores',
+  'Mayoreo',
+  'Retail y punto de venta',
+  'Licitación y gobierno',
+  'E-commerce',
+  'Mixto',
+] as const
+
+export const ESTACIONALIDADES = [
+  'Sin estacionalidad marcada',
+  'Moderada',
+  'Fuerte',
+] as const
+
+export const ESTADOS_CONTABILIDAD = [
+  'Auditada',
+  'Dictaminada fiscalmente',
+  'Interna sin auditar',
+  'Sin contabilidad formal',
+] as const
+
+/** Las cuatro áreas que se califican en la ficha del cliente. */
+export const AREAS_DESEMPENO = ['Finanzas', 'Operaciones', 'Comercial', 'RH'] as const
+
+/**
+ * Cuántas celdas puede marcar el cliente como dolorosas. Tres, y no más:
+ * quien marca todo no priorizó nada, y el plan del paso 07 sale de aquí.
+ */
+export const MAX_DOLOROSAS = 3
+
+export const CRECIMIENTOS = [
+  'Creció',
+  'Se mantuvo igual',
+  'Decreció',
 ] as const

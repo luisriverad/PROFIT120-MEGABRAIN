@@ -1,6 +1,6 @@
 import { Fragment, useMemo, useState } from 'react'
 import type { PreguntaGenerada } from '@/types'
-import { CLIENTE, DECLARACION_CLIENTE, HIPOTESIS_CLIENTE } from '@/data/caso'
+import { DECLARACION_CLIENTE, HIPOTESIS_CLIENTE } from '@/data/caso'
 import { MODELO_IA, generarBateria, hayCredencial, preguntasDelTema } from '@/lib/ia'
 import { Card, EncabezadoPaso, PreguntaConTexto } from '@/components/ui/Primitivos'
 import { BateriaPreguntas } from '@/components/ui/BateriaPreguntas'
@@ -30,7 +30,7 @@ const FASES = [
 
 export function Paso03Hipotesis() {
   const {
-    mapa, plan, bateria, setBateria, respuestas, setRespuestas, temas, setTemas,
+    cliente, mapa, plan, bateria, setBateria, respuestas, setRespuestas, temas, setTemas,
   } = useExpediente()
 
   const [hipotesis, setHipotesis] = useState(HIPOTESIS_CLIENTE.valor)
@@ -49,7 +49,7 @@ export function Paso03Hipotesis() {
     setError('')
     try {
       setBateria(await generarBateria({
-        cliente: CLIENTE, declaracion: DECLARACION_CLIENTE, plan, mapa,
+        cliente: cliente, declaracion: DECLARACION_CLIENTE, plan, mapa,
       }))
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo escribir la batería.')
@@ -67,7 +67,7 @@ export function Paso03Hipotesis() {
     setError('')
     try {
       const preguntas = await preguntasDelTema({
-        cliente: CLIENTE, plan, mapa, tema: texto, previas: [],
+        cliente: cliente, plan, mapa, tema: texto, previas: [],
       })
       setTemas((t) => [
         ...t,
@@ -147,7 +147,7 @@ export function Paso03Hipotesis() {
           <TemaAbiertoBloque
             tema={t}
             numero={porFrente.length + 2 + i}
-            cliente={CLIENTE}
+            cliente={cliente}
             plan={plan}
             mapa={mapa}
             respuestas={respuestas}

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CLIENTE, DECLARACION_CLIENTE } from '@/data/caso'
+import { DECLARACION_CLIENTE } from '@/data/caso'
 import { RAZONES, formatearCampo, valoresDelEjercicio } from '@/data/finanzas'
 import { benchmarkDelSector } from '@/data/benchmarks'
 import { MODELO_IA, cuantificarInaccion } from '@/lib/ia'
@@ -32,19 +32,19 @@ const CONDICIONES = [
 ]
 
 export function Paso07Costo() {
-  const { campos, ejercicios, mapa, plan, costo, setCosto, respuestas } = useExpediente()
+  const { cliente, campos, ejercicios, mapa, plan, costo, setCosto, respuestas } = useExpediente()
   const [instruccion, setInstruccion] = useState('')
 
   const generar = async () => {
     setCosto(await cuantificarInaccion({
-      cliente: CLIENTE,
+      cliente: cliente,
       declaracion: DECLARACION_CLIENTE,
       plan,
       mapa,
       campos,
       ejercicios,
       razones: RAZONES,
-      benchmark: benchmarkDelSector(CLIENTE.sector),
+      benchmark: benchmarkDelSector(cliente.sector),
       respuestas,
       instruccion: instruccion.trim(),
     }))

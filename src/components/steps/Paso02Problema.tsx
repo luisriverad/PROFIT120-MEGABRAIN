@@ -50,7 +50,7 @@ export function Paso02Problema() {
 
   return (
     <>
-      <EncabezadoPaso paso="Paso 02 · Problema declarado" titulo="¿Qué necesitas?" />
+      <EncabezadoPaso paso="Paso 02 · Declaración de problema" titulo="¿Qué necesitas?" />
 
       <NotaConsultor rotulo="Nota de método:">
         el problema declarado casi nunca es el problema. Se documenta para poder mostrarle al cliente,

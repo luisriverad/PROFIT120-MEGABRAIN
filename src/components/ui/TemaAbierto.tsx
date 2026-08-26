@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { MapaRiesgos, PlanArranque, PreguntaGenerada, TemaAbierto as Tema } from '@/types'
+import type { FichaCliente, MapaRiesgos, PlanArranque, PreguntaGenerada, TemaAbierto as Tema } from '@/types'
 import { diagnosticarTema, hayCredencial, preguntasDelTema } from '@/lib/ia'
 import { LlaveIA } from '@/components/ui/LlaveIA'
 import { ProgresoIA } from '@/components/ui/ProgresoIA'
@@ -35,7 +35,7 @@ export function TemaAbiertoBloque({
 }: {
   tema: Tema
   numero: number
-  cliente: { razonSocial: string; sector: string; aniosOperacion: string; clientes80: string; lineasActivas: string }
+  cliente: FichaCliente
   plan: PlanArranque | null
   mapa: MapaRiesgos | null
   respuestas: Record<string, string>

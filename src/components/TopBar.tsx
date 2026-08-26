@@ -1,6 +1,13 @@
-import { CLIENTE } from '@/data/caso'
+import { useExpediente } from '@/estado/Expediente'
 
 export function TopBar() {
+  const { cliente } = useExpediente()
+
+  /* El resumen de la barra ya no se escribe a mano: sale de la ficha, así que
+     cambiar el sector o los empleados en la barra lateral se ve aquí arriba. */
+  const resumen = [cliente.sector, cliente.facturacionAnual, `${cliente.empleados} empleados`]
+    .filter(Boolean).join(' · ')
+
   return (
     <div className="topbar">
       <div className="brand-block">
@@ -10,11 +17,9 @@ export function TopBar() {
       </div>
       <div className="topbar-right">
         <div className="client-chip">
-          <span className="cname">{CLIENTE.razonSocial}</span>
-          <span className="cmeta">{CLIENTE.resumenBarra}</span>
+          <span className="cname">{cliente.razonSocial}</span>
+          <span className="cmeta">{resumen}</span>
         </div>
-        <button className="btn-ghost">Cambiar cliente</button>
-        <button className="btn-ghost">Exportar expediente</button>
       </div>
     </div>
   )

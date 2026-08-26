@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import type { AccionPlan, VentanaPlan } from '@/types'
-import { CLIENTE } from '@/data/caso'
 import { MODELO_IA, generarPlanTrabajo } from '@/lib/ia'
 import { EncabezadoPaso } from '@/components/ui/Primitivos'
 import { BloqueIA } from '@/components/ui/BloqueIA'
@@ -112,7 +111,7 @@ function Accion({
 }
 
 export function Paso09Plan() {
-  const { plan, costo, causas, respuestas, trabajo, setTrabajo, detalles } = useExpediente()
+  const { cliente, plan, costo, causas, respuestas, trabajo, setTrabajo, detalles } = useExpediente()
   const [instruccion, setInstruccion] = useState('')
   const [abierta, setAbierta] = useState<AccionPlan | null>(null)
   const { doc, imprimir } = useImpresion()
@@ -120,7 +119,7 @@ export function Paso09Plan() {
 
   const generar = async () => {
     const r = await generarPlanTrabajo({
-      cliente: CLIENTE, plan, costo, causas, respuestas, instruccion: instruccion.trim(),
+      cliente: cliente, plan, costo, causas, respuestas, instruccion: instruccion.trim(),
     })
     setTrabajo(() => r)
   }
@@ -138,8 +137,8 @@ export function Paso09Plan() {
    * el consultor decide si vale la pena mandarla así o generarla antes.
    */
   const armar = (lista: AccionPlan[], titulo: string, conLectura: boolean): DocumentoExport => ({
-    cliente: CLIENTE.razonSocial,
-    sector: CLIENTE.sector,
+    cliente: cliente.razonSocial,
+    sector: cliente.sector,
     titulo,
     lectura: conLectura ? trabajo?.lectura : undefined,
     items: lista.map((a) => ({ accion: a, detalle: detalles[a.id] ?? null })),

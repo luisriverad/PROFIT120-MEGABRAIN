@@ -1,10 +1,10 @@
 import { createContext, useContext, useState, type ReactNode } from 'react'
 import type {
   Accountability, ArchivoAdjunto, BateriaContexto, CampoFinanciero, CausasRaiz, CostoInaccion,
-  DetalleAccion, Ejercicio, MapaRiesgos, PlanArranque, PlanTrabajo, TemaAbierto,
+  DetalleAccion, Ejercicio, FichaCliente, MapaRiesgos, PlanArranque, PlanTrabajo, TemaAbierto,
 } from '@/types'
 import {
-  BATERIA_DEMO, CAMPOS_FINANCIEROS, CAUSAS_DEMO, COSTO_DEMO, DIMENSIONES_ACTIVAS, EJERCICIOS,
+  BATERIA_DEMO, CAMPOS_FINANCIEROS, CAUSAS_DEMO, CLIENTE, COSTO_DEMO, DIMENSIONES_ACTIVAS, EJERCICIOS,
   ACCOUNTABILITY_DEMO, DETALLES_DEMO, MAPA_DEMO, PLAN_DEMO, PLAN_TRABAJO_DEMO,
 } from '@/data/caso'
 
@@ -17,6 +17,13 @@ import {
  * también significa que navegar entre pasos no lo pierde.
  */
 interface Expediente {
+  /**
+   * La ficha técnica del cliente. Se captura en la barra lateral, fuera de la
+   * ruta, porque no es de ningún paso: es el encabezado de todos. El sector
+   * además elige el benchmark contra el que se compara la radiografía.
+   */
+  cliente: FichaCliente
+  setCliente: (f: (c: FichaCliente) => FichaCliente) => void
   /** La radiografía: se captura en el paso 01 y la leen todos los demás. */
   campos: CampoFinanciero[]
   setCampos: (f: (c: CampoFinanciero[]) => CampoFinanciero[]) => void
@@ -69,6 +76,7 @@ const Ctx = createContext<Expediente | null>(null)
 export function ExpedienteProvider({ children }: { children: ReactNode }) {
   // Arranca con el mapa del caso demostrativo, igual que el resto de la
   // aplicación. La primera corrida real lo reemplaza.
+  const [cliente, setCliente] = useState<FichaCliente>(CLIENTE)
   const [campos, setCampos] = useState(CAMPOS_FINANCIEROS)
   const [ejercicios, setEjercicios] = useState(EJERCICIOS)
   const [mapa, setMapa] = useState<MapaRiesgos | null>(MAPA_DEMO)
@@ -86,7 +94,7 @@ export function ExpedienteProvider({ children }: { children: ReactNode }) {
   const [cierre, setCierre] = useState<Accountability | null>(ACCOUNTABILITY_DEMO)
   const [temas, setTemas] = useState<TemaAbierto[]>([])
   return (
-    <Ctx.Provider value={{ campos, setCampos, ejercicios, setEjercicios, mapa, setMapa, plan, setPlan, bateria, setBateria, archivos, setArchivos, confirmadas, setConfirmadas, descartadas, setDescartadas, otros, setOtros,
+    <Ctx.Provider value={{ cliente, setCliente, campos, setCampos, ejercicios, setEjercicios, mapa, setMapa, plan, setPlan, bateria, setBateria, archivos, setArchivos, confirmadas, setConfirmadas, descartadas, setDescartadas, otros, setOtros,
       respuestas, setRespuestas, costo, setCosto, causas, setCausas, trabajo, setTrabajo, detalles, setDetalles, cierre, setCierre, temas, setTemas }}>
       {children}
     </Ctx.Provider>

@@ -1,6 +1,6 @@
 import { Fragment, useState } from 'react'
 import type { KpiSeguimiento } from '@/types'
-import { CLIENTE, DECLARACION_CLIENTE } from '@/data/caso'
+import { DECLARACION_CLIENTE } from '@/data/caso'
 import { formatearCampo } from '@/data/finanzas'
 import { MODELO_IA, generarAccountability } from '@/lib/ia'
 import { EncabezadoPaso } from '@/components/ui/Primitivos'
@@ -76,14 +76,14 @@ function Kpi({ kpi, onResponsable }: { kpi: KpiSeguimiento; onResponsable: (v: s
 }
 
 export function Paso10Accountability() {
-  const { mapa, plan, costo, causas, trabajo, cierre, setCierre } = useExpediente()
+  const { cliente, mapa, plan, costo, causas, trabajo, cierre, setCierre } = useExpediente()
   const [instruccion, setInstruccion] = useState('')
   const [exportando, setExportando] = useState(false)
   const { doc, imprimir } = useImpresion()
 
   const generar = async () => {
     const r = await generarAccountability({
-      cliente: CLIENTE, declaracion: DECLARACION_CLIENTE, mapa, plan, costo, causas, trabajo,
+      cliente: cliente, declaracion: DECLARACION_CLIENTE, mapa, plan, costo, causas, trabajo,
       instruccion: instruccion.trim(),
     })
     setCierre(() => r)
@@ -105,8 +105,8 @@ export function Paso10Accountability() {
 
   /** El cierre completo, listo para mandar. */
   const documento = (): DocumentoExport => ({
-    cliente: CLIENTE.razonSocial,
-    sector: CLIENTE.sector,
+    cliente: cliente.razonSocial,
+    sector: cliente.sector,
     titulo: 'Cierre del diagnóstico — KPIs y responsables',
     cierre: {
       costoTotal: formatearCampo(costoTotal, 'mxn'),
@@ -158,7 +158,7 @@ export function Paso10Accountability() {
 
       {/* El resumen de todo lo anterior, en cuatro cifras */}
       <div className="cierre-hero">
-        <div className="hero-marca">{CLIENTE.razonSocial} · {CLIENTE.sector}</div>
+        <div className="hero-marca">{cliente.razonSocial} · {cliente.sector}</div>
         <div className="hero-cifras">
           <div className="hero-c grande">
             <span className="hero-l">Costo anual de no hacer nada</span>

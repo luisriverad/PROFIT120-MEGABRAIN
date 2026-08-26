@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { MapaRiesgos, PlanArranque as Plan, Semaforo } from '@/types'
+import type { FichaCliente, MapaRiesgos, PlanArranque as Plan, Semaforo } from '@/types'
 import { MODELO_IA, priorizarFrentes } from '@/lib/ia'
 import { BloqueIA } from '@/components/ui/BloqueIA'
 
@@ -36,7 +36,7 @@ const CONDICIONES = [
 export function PlanArranque({
   cliente, declaracion, dimensiones, propias, mapa, plan, onPlan,
 }: {
-  cliente: { razonSocial: string; sector: string; aniosOperacion: string; clientes80: string; lineasActivas: string }
+  cliente: FichaCliente
   declaracion: string
   dimensiones: { nombre: string; tema: string; origen: 'consultor' | 'motor' }[]
   propias: { tema: string; texto: string }[]

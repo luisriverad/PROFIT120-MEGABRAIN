@@ -1,7 +1,5 @@
 import { useState } from 'react'
-import type {
-  BenchmarkSector, CampoFinanciero, Ejercicio, MapaRiesgos, Razon, Semaforo,
-} from '@/types'
+import type { BenchmarkSector, CampoFinanciero, Ejercicio, FichaCliente, MapaRiesgos, Razon, Semaforo } from '@/types'
 import { MODELO_IA, analizarProfundidad } from '@/lib/ia'
 import { BloqueIA } from '@/components/ui/BloqueIA'
 
@@ -44,7 +42,7 @@ const ANGULOS = [
 export function AnalisisProfundidad({
   cliente, ejercicios, campos, razones, benchmark, mapa, onMapa,
 }: {
-  cliente: { razonSocial: string; sector: string; aniosOperacion: string; clientes80: string; lineasActivas: string }
+  cliente: FichaCliente
   ejercicios: Ejercicio[]
   campos: CampoFinanciero[]
   razones: Razon[]

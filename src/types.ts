@@ -6,6 +6,69 @@ export interface Step {
   pregunta: string
 }
 
+/**
+ * Ficha técnica del cliente. Es el único dato que no pertenece a ningún paso:
+ * se captura una vez, vive en la barra lateral y lo lee cada prompt del motor.
+ * Va en cuatro bloques —identidad, tamaño, mercado y calidad de la
+ * información— porque así se pregunta en la primera sesión.
+ */
+export interface FichaCliente {
+  /** Con quién se está hablando: el plan del paso 07 se le entrega a alguien. */
+  contactoNombre: string
+  contactoCargo: string
+  razonSocial: string
+  sector: string
+  aniosOperacion: string
+  ubicacion: string
+  /** Tamaño: lo que define si el hallazgo se mide en miles o en millones. */
+  empleados: string
+  facturacionAnual: string
+  ubicaciones: string
+  /**
+   * Resultado del último año, en las palabras del cliente. No sustituye a la
+   * radiografía del paso 01: es lo que dice antes de abrir un solo estado
+   * financiero, y la distancia entre lo que cree y lo que sale de las cifras
+   * es en sí misma un hallazgo.
+   */
+  ebitda: string
+  crecimiento: string
+  variacion: string
+  /** Mercado: de dónde viene la venta y qué tan concentrada está. */
+  clientes80: string
+  lineasActivas: string
+  cobertura: string
+  exportacion: string
+  canalPrincipal: string
+  estacionalidad: string
+  /**
+   * Calidad de la información: qué tanto se puede confiar en la radiografía
+   * financiera. Una cifra sin auditar no sostiene la misma conversación.
+   */
+  sistema: string
+  contabilidad: string
+  ultimoCierre: string
+  /** Dónde duele, por área, antes de que los números lo confirmen. */
+  areas: DesempenoArea[]
+  /** El negocio contado por su dueño: a qué se dedica y por qué le compran. */
+  actividad: string
+  diferenciador: string
+  /** Lo que no cabe en ningún campo y el consultor no quiere perder. */
+  anotaciones: string
+}
+
+/**
+ * Una de las cuatro áreas del negocio, tal como la califica el cliente en la
+ * primera sesión. `efectivo` y `estrategia` son las dos formas de doler: hacer
+ * mal lo que toca hoy, o estar haciendo bien lo que no toca. Se marcan hasta
+ * tres celdas en total —las que más duelen— para forzar la priorización.
+ */
+export interface DesempenoArea {
+  area: string
+  efectivo: boolean
+  estrategia: boolean
+  desempeno: string
+}
+
 /** Bloque temático del catálogo de dimensiones profundas. */
 export interface TemaDimension {
   n: string
