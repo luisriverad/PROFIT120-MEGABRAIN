@@ -2,7 +2,7 @@ import { Fragment, useState } from 'react'
 import type { KpiSeguimiento } from '@/types'
 import { DECLARACION_CLIENTE } from '@/data/caso'
 import { formatearCampo } from '@/data/finanzas'
-import { MODELO_IA, generarAccountability } from '@/lib/ia'
+import { generarAccountability } from '@/lib/ia'
 import { EncabezadoPaso } from '@/components/ui/Primitivos'
 import { BloqueIA } from '@/components/ui/BloqueIA'
 import { useExpediente } from '@/estado/Expediente'
@@ -189,7 +189,6 @@ export function Paso10Accountability() {
         deshabilitado={!frentes.length}
         textoDeshabilitado="Falta el diagnóstico inicial"
         etiquetaGenerar="Armar el cierre"
-        nota={`${MODELO_IA} · esfuerzo alto sobre el expediente completo`}
         pie={(
           <>
             <div className="modal-atajos">

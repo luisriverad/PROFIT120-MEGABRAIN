@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { BenchmarkSector, CampoFinanciero, Ejercicio, FichaCliente, MapaRiesgos, Razon, Semaforo } from '@/types'
-import { MODELO_IA, analizarProfundidad } from '@/lib/ia'
+import { analizarProfundidad } from '@/lib/ia'
 import { BloqueIA } from '@/components/ui/BloqueIA'
 
 /**
@@ -67,7 +67,6 @@ export function AnalisisProfundidad({
       fases={FASES}
       generar={analizar}
       hayResultado={Boolean(mapa)}
-      nota={`${MODELO_IA} · esfuerzo alto sobre el expediente completo`}
       pie={(
         <>
           <div className="modal-atajos">

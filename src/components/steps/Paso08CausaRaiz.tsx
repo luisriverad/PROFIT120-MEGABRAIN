@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { CadenaCausal } from '@/types'
 import { DECLARACION_CLIENTE } from '@/data/caso'
-import { MODELO_IA, analizarCausaRaiz, hayCredencial, recalcularCadena } from '@/lib/ia'
+import { analizarCausaRaiz, hayCredencial, recalcularCadena } from '@/lib/ia'
 import { ProgresoIA } from '@/components/ui/ProgresoIA'
 import { EncabezadoPaso, NotaConsultor } from '@/components/ui/Primitivos'
 import { BloqueIA } from '@/components/ui/BloqueIA'
@@ -289,7 +289,6 @@ export function Paso08CausaRaiz() {
         deshabilitado={!plan?.frentes.length}
         textoDeshabilitado="Falta el diagnóstico inicial"
         etiquetaGenerar="Bajar las cadenas"
-        nota={`${MODELO_IA} · esfuerzo alto · todo lo de abajo es editable`}
         pie={(
           <>
             <div className="modal-atajos">

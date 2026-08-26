@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FichaCliente, MapaRiesgos, PlanArranque as Plan, Semaforo } from '@/types'
-import { MODELO_IA, priorizarFrentes } from '@/lib/ia'
+import { priorizarFrentes } from '@/lib/ia'
 import { BloqueIA } from '@/components/ui/BloqueIA'
 
 /**
@@ -61,7 +61,6 @@ export function PlanArranque({
       hayResultado={Boolean(plan)}
       deshabilitado={!dimensiones.length}
       textoDeshabilitado="Sin dimensiones marcadas"
-      nota={`${MODELO_IA} · esfuerzo alto sobre ${dimensiones.length} dimensiones y el mapa de riesgos`}
       pie={(
         <>
           <div className="modal-atajos">

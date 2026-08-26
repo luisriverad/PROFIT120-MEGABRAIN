@@ -3,7 +3,7 @@ import type { BenchmarkSector, CampoFinanciero, Documento, Ejercicio, Razon } fr
 import {
   faltantes, formatearCampo, formatearRazon, valoresDelEjercicio, variacionRazon,
 } from '@/data/finanzas'
-import { brechaContraIndustria } from '@/data/benchmarks'
+import { brechaContraIndustria, semaforoIndustria } from '@/data/benchmarks'
 
 /* ---------- Encabezado de paso ---------- */
 
@@ -177,6 +177,9 @@ export function CapturaFinanciera({
   )
 }
 
+/** Posición 0–1 del semáforo, ya en porcentaje de ancho de la barra. */
+const pct = (n: number) => `${Math.max(0, Math.min(1, n)) * 100}%`
+
 /**
  * Razones derivadas. No se capturan: se calculan y se leen.
  * La última columna es el promedio de la industria del sector capturado en el
@@ -218,6 +221,7 @@ export function TablaRazones({
 
           const bm = benchmark.razones[r.clave]
           const brecha = brechaContraIndustria(valores[0], bm?.valor ?? null, r.formato, r.mejorSi)
+          const sem = semaforoIndustria(valores[0], bm, r.mejorSi)
 
           return (
             <Fragment key={r.clave}>
@@ -243,8 +247,28 @@ export function TablaRazones({
                         {formatearRazon(bm.min, r.formato)} – {formatearRazon(bm.max, r.formato)}
                       </span>
                     )}
+                    {sem && (
+                      <span
+                        className={`rz-bar ${sem.nivel}`}
+                        title={`Empresa ${formatearRazon(valores[0], r.formato)} · industria ${formatearRazon(bm.valor, r.formato)}${bm.min !== null && bm.max !== null ? ` (${formatearRazon(bm.min, r.formato)} – ${formatearRazon(bm.max, r.formato)})` : ''}`}
+                      >
+                        <i
+                          className="rz-bar-banda"
+                          style={{ left: pct(sem.banda.ini), width: pct(sem.banda.fin - sem.banda.ini) }}
+                        />
+                        <i
+                          className="rz-bar-brecha"
+                          style={{
+                            left: pct(Math.min(sem.mediana, sem.empresa)),
+                            width: pct(Math.abs(sem.empresa - sem.mediana)),
+                          }}
+                        />
+                        <i className="rz-bar-mediana" style={{ left: pct(sem.mediana) }} />
+                        <i className="rz-bar-emp" style={{ left: pct(sem.empresa) }} />
+                      </span>
+                    )}
                     {brecha && (
-                      <span className={`rz-bm-d ${brecha.mejor ? 'up' : 'down'}`}>
+                      <span className={`rz-bm-d ${sem ? sem.nivel : (brecha.mejor ? 'up' : 'down')}`}>
                         {brecha.texto} vs industria
                       </span>
                     )}

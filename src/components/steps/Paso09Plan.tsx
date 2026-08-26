@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { AccionPlan, VentanaPlan } from '@/types'
-import { MODELO_IA, generarPlanTrabajo } from '@/lib/ia'
+import { generarPlanTrabajo } from '@/lib/ia'
 import { EncabezadoPaso } from '@/components/ui/Primitivos'
 import { BloqueIA } from '@/components/ui/BloqueIA'
 import { ModalAccion } from '@/components/ui/ModalAccion'
@@ -179,7 +179,6 @@ export function Paso09Plan() {
         deshabilitado={!plan?.frentes.length}
         textoDeshabilitado="Falta el diagnóstico inicial"
         etiquetaGenerar="Armar el plan"
-        nota={`${MODELO_IA} · esfuerzo alto · ${acciones.length} acciones en ${frentes.length} frentes`}
         pie={(
           <>
             <div className="modal-atajos">

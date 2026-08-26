@@ -272,8 +272,32 @@ input,textarea,select{font-family:inherit;font-size:13px;color:var(--ink)}
 .rz-bm-v{font-size:15px;font-weight:600;color:var(--slate);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 .rz-bm-r{font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums}
 .rz-bm-d{font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:2px}
-.rz-bm-d.up{color:var(--green-dp)}
-.rz-bm-d.down{color:var(--red)}
+.rz-bm-d.up,.rz-bm-d.verde{color:var(--green-dp)}
+.rz-bm-d.down,.rz-bm-d.rojo{color:var(--red)}
+.rz-bm-d.ambar{color:var(--amber-dk)}
+/* Semáforo contra la industria. La barra no es decoración: el bloque gris es
+   el rango donde vive la mitad del sector, la marca fina es la mediana y el
+   punto es la empresa. El tramo de color mide la distancia entre ambos, así
+   que el color y el largo dicen lo mismo que el número de arriba. */
+.rz-bar{
+  position:relative;display:block;height:6px;width:100%;
+  margin:8px 0 6px;border-radius:3px;background:var(--line-soft);
+}
+.rz-bar>i{position:absolute;display:block}
+.rz-bar-banda{top:0;height:100%;border-radius:3px;background:#D9DEDA}
+.rz-bar-brecha{top:0;height:100%;border-radius:3px;min-width:2px}
+.rz-bar-mediana{top:-3px;width:2px;height:12px;margin-left:-1px;border-radius:1px;background:var(--slate)}
+.rz-bar-emp{
+  top:50%;width:11px;height:11px;margin-left:-5.5px;border-radius:50%;
+  border:2px solid var(--white);transform:translateY(-50%);
+  box-shadow:0 0 0 1px rgba(31,34,37,.12);
+}
+.rz-bar.verde .rz-bar-brecha{background:var(--green)}
+.rz-bar.verde .rz-bar-emp{background:var(--green)}
+.rz-bar.ambar .rz-bar-brecha{background:#E8B84B}
+.rz-bar.ambar .rz-bar-emp{background:var(--amber)}
+.rz-bar.rojo .rz-bar-brecha{background:#D9776E}
+.rz-bar.rojo .rz-bar-emp{background:var(--red)}
 .rz-bm-na{font-size:11.5px;color:#B6BCB8}
 .bm-foot{
   display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
@@ -564,11 +588,18 @@ input,textarea,select{font-family:inherit;font-size:13px;color:var(--ink)}
 
 /* footer */
 .foot{
-  display:flex;justify-content:space-between;align-items:center;
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;
   height:38px;padding:0 22px;background:var(--white);border-top:1px solid var(--line);
   font-size:11px;color:var(--muted);flex-shrink:0;
 }
 .foot span{letter-spacing:.02em}
+.foot span:last-child{text-align:right}
+.foot-axon{
+  text-align:center;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);white-space:nowrap;
+}
+.foot-axon b{font-weight:700;color:var(--slate);letter-spacing:.14em}
+@media(max-width:640px){.foot span:not(.foot-axon){display:none}}
 
 @media(max-width:900px){.sidebar{display:none}.main{padding:22px 20px 34px}}
 

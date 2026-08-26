@@ -13,7 +13,7 @@ import { ProgresoIA } from '@/components/ui/ProgresoIA'
 
 export function BloqueIA({
   titulo, fases, generar, hayResultado, deshabilitado, textoDeshabilitado,
-  etiquetaGenerar = 'Generar análisis', siempreAbierto, nota, pie, children,
+  etiquetaGenerar = 'Generar análisis', siempreAbierto, pie, children,
 }: {
   titulo: string
   fases: string[]
@@ -28,8 +28,6 @@ export function BloqueIA({
    * final de una: ahí plegarlo solo deja un botón flotando en blanco.
    */
   siempreAbierto?: boolean
-  /** Línea de pie: qué modelo corrió y sobre qué. */
-  nota?: ReactNode
   pie?: ReactNode
   children?: ReactNode
 }) {
@@ -109,7 +107,6 @@ export function BloqueIA({
         <div className="prof-pie">
           {pie}
           <div className="modal-acciones">
-            {nota && <span className="modal-modelo">{nota}</span>}
             <div className="modal-btns">
               <button className="btn-ghost" onClick={correr} disabled={deshabilitado}>
                 Regenerar

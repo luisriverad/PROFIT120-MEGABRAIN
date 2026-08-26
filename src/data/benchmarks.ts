@@ -273,6 +273,51 @@ export function benchmarkDelSector(
   return { ...base, razones: { ...base.razones, ...ajustes } }
 }
 
+/**
+ * Semáforo contra la industria. Verde es estar del lado bueno de la mediana,
+ * ámbar es estar por debajo pero todavía dentro del rango donde vive la mitad
+ * del sector, y rojo es haber salido de ese rango. La regla se ancla al p25–p75
+ * medido y no a un porcentaje inventado: lo que decide el color es dónde está
+ * la empresa respecto de sus pares, no cuánto se aleja de un número redondo.
+ *
+ * Devuelve además las posiciones ya normalizadas a 0–1 para dibujar la barra:
+ * la escala se estira hasta incluir a la empresa, de modo que una compañía muy
+ * fuera de rango se vea fuera de rango en vez de pegada al borde.
+ */
+export function semaforoIndustria(
+  actual: number | null,
+  bm: BenchmarkRazon | undefined,
+  mejorSi: 'alto' | 'bajo',
+) {
+  if (actual === null || !bm || bm.valor === null) return null
+  const centro = bm.valor
+
+  // Sin p25–p75 medido, se declara una banda del 25% alrededor del centro. Va
+  // con Math.min/max porque el centro puede ser negativo —ciclo de efectivo.
+  const bordes = [bm.min ?? centro * 0.75, bm.max ?? centro * 1.25]
+  let ini = Math.min(...bordes)
+  let fin = Math.max(...bordes)
+  if (fin - ini < 1e-9) { ini = centro - 1; fin = centro + 1 }
+
+  const nivel = mejorSi === 'alto'
+    ? (actual >= centro ? 'verde' : actual >= ini ? 'ambar' : 'rojo')
+    : (actual <= centro ? 'verde' : actual <= fin ? 'ambar' : 'rojo')
+
+  const bajo = Math.min(ini, actual)
+  const alto = Math.max(fin, actual)
+  const margen = (alto - bajo) * 0.12 || 1
+  const d0 = bajo - margen
+  const d1 = alto + margen
+  const pos = (x: number) => (x - d0) / (d1 - d0)
+
+  return {
+    nivel: nivel as 'verde' | 'ambar' | 'rojo',
+    empresa: pos(actual),
+    mediana: pos(centro),
+    banda: { ini: pos(ini), fin: pos(fin) },
+  }
+}
+
 /** Distancia de la empresa contra su industria, ya redactada. */
 export function brechaContraIndustria(
   actual: number | null,

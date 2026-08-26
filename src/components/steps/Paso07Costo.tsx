@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { DECLARACION_CLIENTE } from '@/data/caso'
 import { RAZONES, formatearCampo, valoresDelEjercicio } from '@/data/finanzas'
 import { benchmarkDelSector } from '@/data/benchmarks'
-import { MODELO_IA, cuantificarInaccion } from '@/lib/ia'
+import { cuantificarInaccion } from '@/lib/ia'
 import { EncabezadoPaso, NotaConsultor } from '@/components/ui/Primitivos'
 import { BloqueIA } from '@/components/ui/BloqueIA'
 import { useExpediente } from '@/estado/Expediente'
@@ -71,7 +71,6 @@ export function Paso07Costo() {
         deshabilitado={!plan?.frentes.length}
         textoDeshabilitado="Falta el diagnóstico inicial"
         etiquetaGenerar="Cuantificar"
-        nota={`${MODELO_IA} · esfuerzo alto sobre la radiografía y los tres frentes`}
         pie={(
           <>
             <div className="modal-atajos">
